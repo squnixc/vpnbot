@@ -1,6 +1,7 @@
 import tempfile
 from pathlib import Path
 from typing import Union
+import base64
 
 try:
     import qrcode
@@ -17,5 +18,9 @@ def create_qr_code(data: str) -> Path:
         img = qrcode.make(data)
         img.save(path)
     else:  # simple fallback
-        path.write_text(data)
+        # provide valid PNG placeholder to avoid Telegram IMAGE_PROCESS_FAILED
+        placeholder = base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HgAHggJ/P/BdVwAAAABJRU5ErkJggg=="
+        )
+        path.write_bytes(placeholder)
     return path

@@ -2,8 +2,9 @@ import logging
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 
-from keyboards.main import get_main_keyboard, get_share_keyboard
+from keyboards.main import get_share_keyboard
 from states.states import MenuState, ReferralState
+from handlers.start import show_main_menu
 
 router = Router()
 
@@ -22,5 +23,4 @@ async def referral_start(message: types.Message, state: FSMContext) -> None:
 
 @router.message(ReferralState.waiting_for_share, F.text)
 async def referral_back(message: types.Message, state: FSMContext) -> None:
-    await message.answer("Главное меню", reply_markup=get_main_keyboard())
-    await state.set_state(MenuState.main_menu)
+    await show_main_menu(message, state)

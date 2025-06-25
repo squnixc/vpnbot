@@ -9,6 +9,7 @@ from keyboards.main import (
     get_subscription_keyboard,
     get_payment_methods_keyboard,
 )
+from handlers.start import show_main_menu
 from states.states import MenuState, SubscriptionState
 
 router = Router()
@@ -56,11 +57,9 @@ async def process_payment(call: types.CallbackQuery, state: FSMContext) -> None:
 
 @router.callback_query(SubscriptionState.payment_method, F.data == "back")
 async def payment_back(call: types.CallbackQuery, state: FSMContext) -> None:
-    await call.message.answer("Главное меню", reply_markup=get_main_keyboard())
-    await state.set_state(MenuState.main_menu)
+    await show_main_menu(call.message, state)
 
 
 @router.message(SubscriptionState.plans, F.text == "⬅️ Назад")
 async def plan_back(message: types.Message, state: FSMContext) -> None:
-    await message.answer("Главное меню", reply_markup=get_main_keyboard())
-    await state.set_state(MenuState.main_menu)
+    await show_main_menu(message, state)
