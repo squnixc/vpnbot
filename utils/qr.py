@@ -29,3 +29,6 @@ def create_qr_code(data: str) -> Path:
         logging.exception("QR generation failed: %s", e)
         placeholder = base64.b64decode(
             "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAEElEQVR4nGP4jxcwjEpjAwD6Hirkl4HYkQAAAABJRU5ErkJggg=="
+        )
+        path.write_bytes(placeholder)
+    return path
