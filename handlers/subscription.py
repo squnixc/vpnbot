@@ -43,9 +43,9 @@ async def _show_payment_options(message: types.Message, state: FSMContext) -> No
     old_msg_id = data.get("payment_message_id")
     if old_msg_id:
         try:
-            await message.bot.delete_messages(
-                message.chat.id,
-                [old_msg_id],
+            await message.bot.delete_message(
+                chat_id=message.chat.id,
+                message_id=old_msg_id,
                 revoke=True,
             )
         except Exception as e:  # noqa: BLE001
