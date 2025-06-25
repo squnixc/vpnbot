@@ -1,10 +1,11 @@
+import logging
 import tempfile
 from pathlib import Path
-from typing import Union
 import base64
 
 try:
     import qrcode
+    from qrcode.constants import ERROR_CORRECT_L
 except ImportError:  # pragma: no cover - optional dependency
     qrcode = None
 
@@ -14,11 +15,18 @@ def create_qr_code(data: str) -> Path:
     temp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     path = Path(temp.name)
     temp.close()
-    if qrcode:
-        img = qrcode.make(data)
+    if qrcode is None:
+        raise RuntimeError(
+            "qrcode package is required to generate QR code. Please install it."
+        )
+    try:
+        qr = qrcode.QRCode(error_correction=ERROR_CORRECT_L, box_size=10, border=4)
+        qr.add_data(data)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
         img.save(path)
-    else:  # simple fallback
-        # provide valid PNG placeholder to avoid Telegram IMAGE_PROCESS_FAILED
+    except Exception as e:  # pragma: no cover - optional dependency issues
+        logging.exception("QR generation failed: %s", e)
         placeholder = base64.b64decode(
             "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAEElEQVR4nGP4jxcwjEpjAwD6Hirkl4HYkQAAAABJRU5ErkJggg=="
         )
