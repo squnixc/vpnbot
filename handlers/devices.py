@@ -17,6 +17,12 @@ from vpn.wireguard import generate_peer
 router = Router()
 
 
+@router.callback_query(F.data == "open_devices")
+async def open_devices_cb(call: types.CallbackQuery, state: FSMContext) -> None:
+    await call.answer()
+    await choose_device(call.message, state)
+
+
 @router.message(MenuState.main_menu, F.text == "📱 Устройства")
 async def choose_device(message: types.Message, state: FSMContext) -> None:
     await message.answer("Выберите устройство", reply_markup=get_devices_keyboard())

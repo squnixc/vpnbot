@@ -16,17 +16,23 @@ router = Router()
 
 
 PLANS = {
-    "1 мес – 99₽": 99_00,
-    "3 мес – 249₽": 249_00,
-    "6 мес – 450₽": 450_00,
+    "1 месяц - 99₽": 99_00,
+    "🔹3 месяца - 249₽": 249_00,
+    "🔸6 месяцев - 450₽": 450_00,
 }
 
 
 @router.message(MenuState.main_menu, F.text == "💎 Подписка")
 async def subscription_plans(message: types.Message, state: FSMContext) -> None:
     text = (
-        "Доступ к VPN после пробного периода.\n"
-        "Выберите тарифный план:"
+        "🔓 Подписка открывает доступ к:\n"
+        "• Стабильному и быстрому соединению\n"
+        "• Доступу к заблокированным сайтам и сервисам\n"
+        "• Одновременному подключению до 3 устройств\n"
+        "• Отсутствие рекламы и прочих отвлекающих вещей\n"
+        "• Самой низкой цене на рынке - всего 3 ₽/день! 🔥\n\n"
+        "Стоимость снижается при оплате за более длительный период. \n\n"
+        "Подключение и оплата — в пару кликов!"
     )
     await message.answer(text, reply_markup=get_subscription_keyboard())
     await state.set_state(SubscriptionState.plans)
@@ -37,12 +43,19 @@ async def _show_payment_options(message: types.Message, state: FSMContext) -> No
     old_msg_id = data.get("payment_message_id")
     if old_msg_id:
         try:
-            await message.bot.delete_message(message.chat.id, old_msg_id)
+            await message.bot.delete_messages(
+                message.chat.id,
+                [old_msg_id],
+                revoke=True,
+            )
         except Exception as e:  # noqa: BLE001
             logging.exception("Failed to delete previous payment message: %s", e)
     await state.update_data(plan=message.text)
     sent = await message.answer(
-        f"Тариф {message.text}. Выберите способ оплаты",
+        "🫶Спасибо за доверие!\n"
+        "Ты на шаг ближе к свободному, безопасному и быстрому интернету — без ограничений.\n"
+        "Мы постарались сделать процесс максимально удобным.\n\n"
+        "👇Выбери подходящий способ оплаты:",
         reply_markup=get_payment_methods_keyboard(),
     )
     await state.update_data(payment_message_id=sent.message_id)
