@@ -5,8 +5,7 @@ from aiogram.fsm.context import FSMContext
 
 from keyboards.main import get_intro_keyboard, get_main_keyboard
 from states.states import MenuState
-
-MAIN_MENU_TEXT = "Вот информация о твоих устройствах и подписке.."
+from utils.userdata import build_main_menu_text
 
 router = Router()
 
@@ -30,7 +29,8 @@ async def show_menu_after_intro(message: types.Message, state: FSMContext) -> No
 
 
 async def show_main_menu(message: types.Message, state: FSMContext) -> None:
-    await message.answer(MAIN_MENU_TEXT, reply_markup=get_main_keyboard())
+    text = build_main_menu_text(message.from_user.id)
+    await message.answer(text, reply_markup=get_main_keyboard(), parse_mode="HTML")
     await state.set_state(MenuState.main_menu)
 
 
