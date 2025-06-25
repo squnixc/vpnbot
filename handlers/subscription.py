@@ -32,14 +32,31 @@ async def subscription_plans(message: types.Message, state: FSMContext) -> None:
     await state.set_state(SubscriptionState.plans)
 
 
-@router.message(SubscriptionState.plans, F.text.in_(list(PLANS.keys())))
-async def choose_plan(message: types.Message, state: FSMContext) -> None:
+async def _show_payment_options(message: types.Message, state: FSMContext) -> None:
+    data = await state.get_data()
+    old_msg_id = data.get("payment_message_id")
+    if old_msg_id:
+        try:
+            await message.bot.delete_message(message.chat.id, old_msg_id)
+        except Exception as e:  # noqa: BLE001
+            logging.exception("Failed to delete previous payment message: %s", e)
     await state.update_data(plan=message.text)
-    await message.answer(
+    sent = await message.answer(
         f"Тариф {message.text}. Выберите способ оплаты",
         reply_markup=get_payment_methods_keyboard(),
     )
+    await state.update_data(payment_message_id=sent.message_id)
     await state.set_state(SubscriptionState.payment_method)
+
+
+@router.message(SubscriptionState.plans, F.text.in_(list(PLANS.keys())))
+async def choose_plan(message: types.Message, state: FSMContext) -> None:
+    await _show_payment_options(message, state)
+
+
+@router.message(SubscriptionState.payment_method, F.text.in_(list(PLANS.keys())))
+async def change_plan(message: types.Message, state: FSMContext) -> None:
+    await _show_payment_options(message, state)
 
 
 @router.callback_query(SubscriptionState.payment_method, F.data == "pay_card")
@@ -55,9 +72,10 @@ async def process_payment(call: types.CallbackQuery, state: FSMContext) -> None:
     logging.info("User %s started payment %s", call.from_user.id, plan)
 
 
-@router.callback_query(SubscriptionState.payment_method, F.data == "back")
-async def payment_back(call: types.CallbackQuery, state: FSMContext) -> None:
-    await show_main_menu(call.message, state)
+
+@router.message(SubscriptionState.payment_method, F.text == "⬅️ Назад")
+async def payment_back(message: types.Message, state: FSMContext) -> None:
+    await show_main_menu(message, state)
 
 
 @router.message(SubscriptionState.plans, F.text == "⬅️ Назад")

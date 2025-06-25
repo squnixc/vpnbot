@@ -24,6 +24,8 @@ def create_qr_code(data: str) -> Path:
         qr.add_data(data)
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
+        # Resize to reduce overall dimensions
+        img = img.resize((150, 150))
         img.save(path)
     except Exception as e:  # pragma: no cover - optional dependency issues
         logging.exception("QR generation failed: %s", e)

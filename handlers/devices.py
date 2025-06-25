@@ -49,3 +49,19 @@ async def pc_selected(message: types.Message, state: FSMContext) -> None:
 @router.message(DeviceState.choose_device, F.text == "⬅️ Назад")
 async def devices_back(message: types.Message, state: FSMContext) -> None:
     await show_main_menu(message, state)
+
+
+@router.message(F.text == "Android")
+async def android_instructions(message: types.Message) -> None:
+    await message.answer(
+        '<a href="https://telegra.ph/Android-Instr-06-25">📱Инструкция для Android</a>',
+        parse_mode="HTML",
+    )
+
+
+@router.message(F.text == "iPhone")
+async def iphone_instructions(message: types.Message) -> None:
+    await message.answer(
+        '<a href="https://telegra.ph/Android-Instr-06-25">🍏Инструкция для iPhone</a>',
+        parse_mode="HTML",
+    )
