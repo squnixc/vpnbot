@@ -19,7 +19,9 @@ async def command_start(message: types.Message, state: FSMContext) -> None:
     data = await state.get_data()
     if not data.get("seen_intro"):
         await message.answer(
-            "Добро пожаловать в VPN бот!", reply_markup=get_intro_keyboard()
+            "🚀 Быстрый и простой VPN прямо в Telegram.\n"
+            "Подключайся и забудь о блокировках!",
+            reply_markup=get_intro_keyboard(),
         )
         await state.update_data(seen_intro=True)
         await state.set_state(MenuState.intro)
@@ -35,7 +37,7 @@ async def show_menu_after_intro(message: types.Message, state: FSMContext) -> No
 async def show_main_menu(message: types.Message, state: FSMContext) -> None:
     text = build_main_menu_text(message.from_user.id)
     await message.answer(text, reply_markup=get_main_keyboard(), parse_mode="HTML")
-    await message.answer(" ", reply_markup=get_connect_device_keyboard())
+    await message.answer("\u200b", reply_markup=get_connect_device_keyboard())
     await state.set_state(MenuState.main_menu)
 
 

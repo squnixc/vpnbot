@@ -7,7 +7,7 @@ from aiogram.types import (
 
 
 def get_intro_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = [[KeyboardButton(text="Начать")]]
+    keyboard = [[KeyboardButton(text="🚀 Вперед!")]]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
