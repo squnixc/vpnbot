@@ -3,8 +3,7 @@ from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 
 from keyboards.main import get_share_keyboard
-from states.states import MenuState, ReferralState
-from handlers.start import show_main_menu
+from states.states import MenuState
 
 router = Router()
 
@@ -17,10 +16,4 @@ async def referral_start(message: types.Message, state: FSMContext) -> None:
         "Поделитесь ссылкой с другом:",
         reply_markup=get_share_keyboard(ref_link),
     )
-    await state.set_state(ReferralState.waiting_for_share)
     logging.info("Referral link sent to %s", message.from_user.id)
-
-
-@router.message(ReferralState.waiting_for_share, F.text)
-async def referral_back(message: types.Message, state: FSMContext) -> None:
-    await show_main_menu(message, state)

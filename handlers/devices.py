@@ -27,7 +27,7 @@ async def phone_selected(message: types.Message, state: FSMContext) -> None:
     config = generate_peer(message.from_user.id)
     conf_file = create_temp_conf_file(config)
     qr_file = create_qr_code(config)
-    await message.answer_photo(types.FSInputFile(qr_file), caption="Ваш конфиг")
+    await message.answer_photo(types.FSInputFile(str(qr_file)), caption="Ваш конфиг")
     await message.answer_document(types.FSInputFile(conf_file))
     await message.answer(
         "Инструкции", reply_markup=get_phone_instructions_keyboard()
@@ -40,7 +40,7 @@ async def pc_selected(message: types.Message, state: FSMContext) -> None:
     config = generate_peer(message.from_user.id)
     conf_file = create_temp_conf_file(config)
     qr_file = create_qr_code(config)
-    await message.answer_photo(types.FSInputFile(qr_file), caption="Ваш конфиг")
+    await message.answer_photo(types.FSInputFile(str(qr_file)), caption="Ваш конфиг")
     await message.answer_document(types.FSInputFile(conf_file))
     await message.answer(
         "Инструкции", reply_markup=get_pc_instructions_keyboard()

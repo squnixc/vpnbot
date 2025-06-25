@@ -20,7 +20,7 @@ def create_qr_code(data: str) -> Path:
     else:  # simple fallback
         # provide valid PNG placeholder to avoid Telegram IMAGE_PROCESS_FAILED
         placeholder = base64.b64decode(
-            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HgAHggJ/P/BdVwAAAABJRU5ErkJggg=="
+            "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAEElEQVR4nGP4jxcwjEpjAwD6Hirkl4HYkQAAAABJRU5ErkJggg=="
         )
         path.write_bytes(placeholder)
     return path

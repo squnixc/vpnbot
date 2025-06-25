@@ -16,9 +16,5 @@ class SubscriptionState(StatesGroup):
     confirm = State()
 
 
-class ReferralState(StatesGroup):
-    waiting_for_share = State()
-
-
 class FAQState(StatesGroup):
     reading = State()
