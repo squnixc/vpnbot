@@ -3,7 +3,11 @@ from aiogram import Router, types, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 
-from keyboards.main import get_intro_keyboard, get_main_keyboard
+from keyboards.main import (
+    get_intro_keyboard,
+    get_main_keyboard,
+    get_connect_device_keyboard,
+)
 from states.states import MenuState
 from utils.userdata import build_main_menu_text
 
@@ -31,6 +35,7 @@ async def show_menu_after_intro(message: types.Message, state: FSMContext) -> No
 async def show_main_menu(message: types.Message, state: FSMContext) -> None:
     text = build_main_menu_text(message.from_user.id)
     await message.answer(text, reply_markup=get_main_keyboard(), parse_mode="HTML")
+    await message.answer(" ", reply_markup=get_connect_device_keyboard())
     await state.set_state(MenuState.main_menu)
 
 

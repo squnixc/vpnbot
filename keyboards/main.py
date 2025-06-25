@@ -1,5 +1,9 @@
-from aiogram.types import (ReplyKeyboardMarkup, KeyboardButton,
-                           InlineKeyboardMarkup, InlineKeyboardButton)
+from aiogram.types import (
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 
 
 def get_intro_keyboard() -> ReplyKeyboardMarkup:
@@ -25,8 +29,8 @@ def get_devices_keyboard() -> ReplyKeyboardMarkup:
 
 def get_subscription_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text="1 мес – 99₽"), KeyboardButton(text="3 мес – 249₽")],
-        [KeyboardButton(text="6 мес – 450₽")],
+        [KeyboardButton(text="1 месяц - 99₽"), KeyboardButton(text="🔹3 месяца - 249₽")],
+        [KeyboardButton(text="🔸6 месяцев - 450₽")],
         [KeyboardButton(text="⬅️ Назад")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
@@ -35,6 +39,13 @@ def get_subscription_keyboard() -> ReplyKeyboardMarkup:
 def get_payment_methods_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton(text="💳 Банковская карта", callback_data="pay_card")],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_connect_device_keyboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [InlineKeyboardButton(text="🔌 Подключить устройство", callback_data="open_devices")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
