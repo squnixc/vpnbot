@@ -1,8 +1,8 @@
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 
-from keyboards.main import get_main_keyboard
-from states.states import MenuState, FAQState
+from states.states import FAQState
+from handlers.start import show_main_menu
 
 router = Router()
 
@@ -15,8 +15,7 @@ FAQ_TEXT = (
 )
 
 
-@router.message(MenuState.main_menu, F.text == "❓ Вопросы")
+@router.message(F.text == "❓ Вопросы")
 async def faq_start(message: types.Message, state: FSMContext) -> None:
     await message.answer(FAQ_TEXT)
-    await message.answer("Главное меню", reply_markup=get_main_keyboard())
-    await state.set_state(MenuState.main_menu)
+    await show_main_menu(message, state)

@@ -40,8 +40,12 @@ def get_payment_methods_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
+from urllib.parse import quote_plus
+
+
 def get_share_keyboard(url: str) -> InlineKeyboardMarkup:
-    keyboard = [[InlineKeyboardButton(text="Поделиться ссылкой", url=url)]]
+    share_url = f"https://t.me/share/url?url={quote_plus(url)}"
+    keyboard = [[InlineKeyboardButton(text="Поделиться ссылкой", url=share_url)]]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 

@@ -4,10 +4,10 @@ from aiogram.fsm.context import FSMContext
 
 from keyboards.main import (
     get_devices_keyboard,
-    get_main_keyboard,
     get_phone_instructions_keyboard,
     get_pc_instructions_keyboard,
 )
+from handlers.start import show_main_menu
 from states.states import MenuState, DeviceState
 from utils.file import create_temp_conf_file
 from utils.qr import create_qr_code
@@ -50,5 +50,4 @@ async def pc_selected(message: types.Message, state: FSMContext) -> None:
 
 @router.message(DeviceState.choose_device, F.text == "⬅️ Назад")
 async def devices_back(message: types.Message, state: FSMContext) -> None:
-    await message.answer("Главное меню", reply_markup=get_main_keyboard())
-    await state.set_state(MenuState.main_menu)
+    await show_main_menu(message, state)
