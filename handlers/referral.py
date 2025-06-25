@@ -13,7 +13,11 @@ async def referral_start(message: types.Message, state: FSMContext) -> None:
     bot_username = (await message.bot.get_me()).username
     ref_link = f"https://t.me/{bot_username}?start={message.from_user.id}"
     await message.answer(
-        "Поделитесь ссылкой с другом:",
+        (
+            "🤝 Приглашай друзей — получай дни в подарок.\n\n"
+            "За каждого подключившегося по твоей ссылке — +7 дней к твоей подписке.\n"
+            "Поделись ссылкой и пользуйся дольше — бесплатно."
+        ),
         reply_markup=get_share_keyboard(ref_link),
     )
     logging.info("Referral link sent to %s", message.from_user.id)

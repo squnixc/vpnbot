@@ -85,7 +85,7 @@ async def devices_back(message: types.Message, state: FSMContext) -> None:
 @router.message(F.text == "🔴Инструкция для Android")
 async def android_instructions(message: types.Message) -> None:
     await message.answer(
-        '<a href="https://telegra.ph/Android-Instr-06-25">📱Инструкция для Android</a>',
+        '<a href="https://telegra.ph/Android-Instr-06-25">🔴Инструкция для Android</a>',
         parse_mode="HTML",
     )
 
@@ -93,7 +93,7 @@ async def android_instructions(message: types.Message) -> None:
 @router.message(F.text == "🟢Инструкция для iPhone")
 async def iphone_instructions(message: types.Message) -> None:
     await message.answer(
-        '<a href="https://telegra.ph/Android-Instr-06-25">🍏Инструкция для iPhone</a>',
+        '<a href="https://telegra.ph/Android-Instr-06-25">🟢Инструкция для iPhone</a>',
         parse_mode="HTML",
     )
 
