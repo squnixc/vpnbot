@@ -32,3 +32,8 @@ async def show_menu_after_intro(message: types.Message, state: FSMContext) -> No
 async def show_main_menu(message: types.Message, state: FSMContext) -> None:
     await message.answer(MAIN_MENU_TEXT, reply_markup=get_main_keyboard())
     await state.set_state(MenuState.main_menu)
+
+
+@router.message(F.text == "🏠 Главное меню")
+async def main_menu_button(message: types.Message, state: FSMContext) -> None:
+    await show_main_menu(message, state)
