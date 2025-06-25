@@ -49,19 +49,17 @@ def get_share_keyboard(url: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
-def get_phone_instructions_keyboard() -> InlineKeyboardMarkup:
+def get_phone_instructions_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton(text="Android", callback_data="android"),
-         InlineKeyboardButton(text="iPhone", callback_data="iphone")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="home")],
+        [KeyboardButton(text="Android"), KeyboardButton(text="iPhone")],
+        [KeyboardButton(text="🏠 Главное меню")],
     ]
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
-def get_pc_instructions_keyboard() -> InlineKeyboardMarkup:
+def get_pc_instructions_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton(text="Windows", callback_data="windows"),
-         InlineKeyboardButton(text="MacOS", callback_data="mac")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="home")],
+        [KeyboardButton(text="Windows"), KeyboardButton(text="MacOS")],
+        [KeyboardButton(text="🏠 Главное меню")],
     ]
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
