@@ -21,7 +21,7 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
 
 def get_devices_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text="Телефон"), KeyboardButton(text="Компьютер")],
+        [KeyboardButton(text="📱Телефон"), KeyboardButton(text="💻Компьютер")],
         [KeyboardButton(text="⬅️ Назад")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
@@ -41,15 +41,6 @@ def get_payment_methods_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="💳 Банковская карта", callback_data="pay_card")],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-
-def get_connect_device_keyboard() -> InlineKeyboardMarkup:
-    keyboard = [
-        [InlineKeyboardButton(text="🔌 Подключить устройство", callback_data="open_devices")]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-
 from urllib.parse import quote_plus
 
 
@@ -61,7 +52,10 @@ def get_share_keyboard(url: str) -> InlineKeyboardMarkup:
 
 def get_phone_instructions_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text="Android"), KeyboardButton(text="iPhone")],
+        [
+            KeyboardButton(text="🔴Инструкция для Android"),
+            KeyboardButton(text="🟢Инструкция для iPhone"),
+        ],
         [KeyboardButton(text="🏠 Главное меню")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
@@ -69,7 +63,10 @@ def get_phone_instructions_keyboard() -> ReplyKeyboardMarkup:
 
 def get_pc_instructions_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text="Windows"), KeyboardButton(text="MacOS")],
+        [
+            KeyboardButton(text="🔴Инструкция для Windows"),
+            KeyboardButton(text="🟢Инструкция для MacOS"),
+        ],
         [KeyboardButton(text="🏠 Главное меню")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
