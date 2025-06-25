@@ -35,7 +35,6 @@ def get_subscription_keyboard() -> ReplyKeyboardMarkup:
 def get_payment_methods_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton(text="💳 Банковская карта", callback_data="pay_card")],
-        [InlineKeyboardButton(text="⬅️ Назад", callback_data="back")],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
