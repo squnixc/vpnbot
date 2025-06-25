@@ -11,6 +11,7 @@ from handlers.start import show_main_menu
 from states.states import MenuState, DeviceState
 from utils.file import create_temp_conf_file
 from utils.qr import create_qr_code
+from utils.userdata import mark_device_connected
 from vpn.wireguard import generate_peer
 
 router = Router()
@@ -30,6 +31,7 @@ async def phone_selected(message: types.Message, state: FSMContext) -> None:
     await message.answer_photo(types.FSInputFile(str(qr_file)), caption="Ваш конфиг")
     await message.answer_document(types.FSInputFile(conf_file))
     await message.answer("Инструкции", reply_markup=get_phone_instructions_keyboard())
+    mark_device_connected(message.from_user.id, "phone")
     logging.info("Sent phone config to %s", message.from_user.id)
     await state.set_state(DeviceState.choose_device)
 
@@ -42,6 +44,7 @@ async def pc_selected(message: types.Message, state: FSMContext) -> None:
     await message.answer_photo(types.FSInputFile(str(qr_file)), caption="Ваш конфиг")
     await message.answer_document(types.FSInputFile(conf_file))
     await message.answer("Инструкции", reply_markup=get_pc_instructions_keyboard())
+    mark_device_connected(message.from_user.id, "computer")
     logging.info("Sent PC config to %s", message.from_user.id)
     await state.set_state(DeviceState.choose_device)
 
