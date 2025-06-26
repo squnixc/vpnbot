@@ -37,14 +37,15 @@ async def phone_selected(message: types.Message, state: FSMContext) -> None:
         caption=(
             "📥 Подключение почти готово!\n\n"
             "Ты можешь подключиться к VPN двумя способами:\n"
-            "Скачать файл vpn.conf\n"
-            "Или отсканировать QR-код в приложении WireGuard / AmneziaWG\n\n"
-            "📖 Затем открой инструкцию для своего устройства и следуй шагам — подключение займёт меньше минуты!"
+            "1. Скачать файл vpn.conf\n"
+            "2. Или отсканировать QR-код в приложении AmneziaWG / WireGuard\n\n"
+            "📖 Затем открой инструкцию для своего устройства и следуй шагам — подключение займёт меньше минуты!\n"
+            "⚠️Один конфиг работает для одного устройства!"
         ),
     )
     await message.answer_document(types.FSInputFile(conf_file))
     await message.answer(
-        "⚠️Один конфиг работает для одного устройства!\n👇 Выбери инструкцию:",
+        "👇 Выбери инструкцию:",
         reply_markup=get_phone_instructions_keyboard(),
     )
     mark_device_connected(message.from_user.id, "phone")
@@ -62,14 +63,15 @@ async def pc_selected(message: types.Message, state: FSMContext) -> None:
         caption=(
             "📥 Подключение почти готово!\n\n"
             "Ты можешь подключиться к VPN двумя способами:\n"
-            "Скачать файл vpn.conf\n"
-            "Или отсканировать QR-код в приложении WireGuard / AmneziaWG\n\n"
-            "📖 Затем открой инструкцию для своего устройства и следуй шагам — подключение займёт меньше минуты!"
+            "1. Скачать файл vpn.conf\n"
+            "2. Или отсканировать QR-код в приложении AmneziaWG / WireGuard\n\n"
+            "📖 Затем открой инструкцию для своего устройства и следуй шагам — подключение займёт меньше минуты!\n"
+            "⚠️Один конфиг работает для одного устройства!"
         ),
     )
     await message.answer_document(types.FSInputFile(conf_file))
     await message.answer(
-        "⚠️Один конфиг работает для одного устройства!\n👇 Выбери инструкцию:",
+        "👇 Выбери инструкцию:",
         reply_markup=get_pc_instructions_keyboard(),
     )
     mark_device_connected(message.from_user.id, "computer")
@@ -85,7 +87,7 @@ async def devices_back(message: types.Message, state: FSMContext) -> None:
 @router.message(F.text == "🔴Инструкция для Android")
 async def android_instructions(message: types.Message) -> None:
     await message.answer(
-        '<a href="https://telegra.ph/Android-Instr-06-25">🔴Инструкция для Android</a>',
+        '<a href="https://telegra.ph/Android-Instr-06-25">📚 Инструкция для Android</a>',
         parse_mode="HTML",
     )
 
@@ -93,7 +95,7 @@ async def android_instructions(message: types.Message) -> None:
 @router.message(F.text == "🟢Инструкция для iPhone")
 async def iphone_instructions(message: types.Message) -> None:
     await message.answer(
-        '<a href="https://telegra.ph/Android-Instr-06-25">🟢Инструкция для iPhone</a>',
+        '<a href="https://telegra.ph/Android-Instr-06-25">📚 Инструкция для iPhone</a>',
         parse_mode="HTML",
     )
 
@@ -101,7 +103,7 @@ async def iphone_instructions(message: types.Message) -> None:
 @router.message(F.text == "🔴Инструкция для Windows")
 async def windows_instructions(message: types.Message) -> None:
     await message.answer(
-        '<a href="https://telegra.ph/Android-Instr-06-25">🖥️Инструкция для Windows</a>',
+        '<a href="https://telegra.ph/Android-Instr-06-25">📚 Инструкция для Windows</a>',
         parse_mode="HTML",
     )
 
@@ -109,6 +111,6 @@ async def windows_instructions(message: types.Message) -> None:
 @router.message(F.text == "🟢Инструкция для MacOS")
 async def macos_instructions(message: types.Message) -> None:
     await message.answer(
-        '<a href="https://telegra.ph/Android-Instr-06-25">🍏Инструкция для MacOS</a>',
+        '<a href="https://telegra.ph/Android-Instr-06-25">📚 Инструкция для MacOS</a>',
         parse_mode="HTML",
     )
