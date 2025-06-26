@@ -50,6 +50,17 @@ async def _show_payment_options(message: types.Message, state: FSMContext) -> No
             )
         except Exception as e:  # noqa: BLE001
             logging.exception("Failed to delete previous payment message: %s", e)
+
+    old_plan_msg_id = data.get("plan_message_id")
+    if old_plan_msg_id:
+        try:
+            await message.bot.delete_message(
+                chat_id=message.chat.id,
+                message_id=old_plan_msg_id,
+                revoke=True,
+            )
+        except Exception as e:  # noqa: BLE001
+            logging.exception("Failed to delete previous plan message: %s", e)
     await state.update_data(plan=message.text)
     sent = await message.answer(
         "🫶Спасибо за доверие!\n\n"
@@ -58,7 +69,9 @@ async def _show_payment_options(message: types.Message, state: FSMContext) -> No
         "👇Выбери подходящий способ оплаты:",
         reply_markup=get_payment_methods_keyboard(),
     )
-    await state.update_data(payment_message_id=sent.message_id)
+    await state.update_data(
+        payment_message_id=sent.message_id, plan_message_id=message.message_id
+    )
     await state.set_state(SubscriptionState.payment_method)
 
 
