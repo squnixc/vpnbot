@@ -1,22 +1,31 @@
 from datetime import datetime, timedelta
 from typing import Dict, Any
 
-CONFIG_DURATION_MINUTES = 2
+from .storage import (
+    get_user,
+    save_user,
+    increment_peers,
+    peers_count,
+    is_banned,
+)
 
-_user_data: Dict[int, Dict[str, Any]] = {}
+CONFIG_DURATION_MINUTES = 2
 
 
 def mark_device_connected(user_id: int, device: str) -> None:
-    """Mark device as connected and update expiry."""
+    """Mark device as connected, increment peers and update expiry."""
+    info = get_user(user_id)
     expires = datetime.utcnow() + timedelta(minutes=CONFIG_DURATION_MINUTES)
-    info = _user_data.setdefault(user_id, {"phone": False, "computer": False, "expires_at": expires})
     info[device] = True
     info["expires_at"] = expires
+    increment_peers(user_id)
+    save_user(user_id, info)
 
 
 def get_user_info(user_id: int) -> Dict[str, Any]:
     """Return stored info for user."""
-    return _user_data.get(user_id, {"phone": False, "computer": False, "expires_at": None})
+    return get_user(user_id)
+
 
 def plural(value: int, forms: tuple[str, str, str]) -> str:
     value = abs(value) % 100

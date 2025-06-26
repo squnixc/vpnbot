@@ -1,8 +1,12 @@
 import logging
 
+from utils.storage import peers_count, increment_peers
+
 
 def generate_peer(user_id: int) -> str:
-    """Return sample WireGuard config."""
+    """Return sample WireGuard config and store peer count."""
+    if peers_count(user_id) >= 3:
+        raise RuntimeError("Maximum number of peers reached")
     logging.info("Generating WireGuard config for %s", user_id)
     config = (
         "[Interface]\n"
@@ -24,4 +28,5 @@ def generate_peer(user_id: int) -> str:
         "AllowedIPs = 0.0.0.0/0\n"
         "Endpoint = 188.253.24.141:51822"
     )
+    increment_peers(user_id)
     return config
