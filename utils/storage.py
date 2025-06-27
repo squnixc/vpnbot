@@ -80,3 +80,9 @@ def update_expiration(user_id: int, minutes: int) -> None:
     info = get_user(user_id)
     info["expires_at"] = datetime.utcnow() + timedelta(minutes=minutes)
     save_user(user_id, info)
+
+
+def all_user_ids() -> list[int]:
+    """Return list of all known user IDs."""
+    data = _load()
+    return [int(uid) for uid in data.keys()]

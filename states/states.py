@@ -18,3 +18,12 @@ class SubscriptionState(StatesGroup):
 
 class FAQState(StatesGroup):
     reading = State()
+
+
+class AdminState(StatesGroup):
+    main = State()
+    panel = State()
+    about = State()
+    send = State()
+    gift = State()
+    manage = State()
