@@ -150,13 +150,15 @@ async def about_gift(message: types.Message, state: FSMContext) -> None:
 @router.message(AdminState.send, Command("back"))
 @router.message(AdminState.send, lambda m: m.text == "/back")
 async def send_back(message: types.Message, state: FSMContext) -> None:
-    await about_send.__wrapped__(message, state)  # go back to about menu via function
+    # Return to the "about" menu when leaving the sending section
+    await show_about(message, state)
 
 
 @router.message(AdminState.gift, Command("back"))
 @router.message(AdminState.gift, lambda m: m.text == "/back")
 async def gift_back(message: types.Message, state: FSMContext) -> None:
-    await about_gift.__wrapped__(message, state)
+    # Return to the "about" menu when leaving the gifting section
+    await show_about(message, state)
 
 
 @router.message(AdminState.send, Command("to_one"))
