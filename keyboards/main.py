@@ -22,7 +22,7 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
 def get_devices_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
         [KeyboardButton(text="📱Телефон"), KeyboardButton(text="💻Компьютер")],
-        [KeyboardButton(text="⬅️ Назад")],
+        [KeyboardButton(text="Мои устройства"), KeyboardButton(text="⬅️ Назад")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
@@ -70,3 +70,14 @@ def get_pc_instructions_keyboard() -> ReplyKeyboardMarkup:
         [KeyboardButton(text="🏠 Главное меню")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
+def get_my_devices_keyboard(devices: list[str]) -> ReplyKeyboardMarkup:
+    keyboard = [[KeyboardButton(text=name)] for name in devices]
+    keyboard.append([KeyboardButton(text="⬅️ Назад")])
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
+def get_main_menu_inline() -> InlineKeyboardMarkup:
+    keyboard = [[InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
