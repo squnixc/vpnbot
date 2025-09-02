@@ -8,6 +8,7 @@ class MenuState(StatesGroup):
 
 class DeviceState(StatesGroup):
     choose_device = State()
+    my_devices = State()
 
 
 class SubscriptionState(StatesGroup):

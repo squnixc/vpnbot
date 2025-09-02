@@ -4,21 +4,19 @@ from typing import Dict, Any
 from .storage import (
     get_user,
     save_user,
-    increment_peers,
-    peers_count,
-    is_banned,
 )
 
 CONFIG_DURATION_MINUTES = 2
 
 
-def mark_device_connected(user_id: int, device: str) -> None:
-    """Mark device as connected, increment peers and update expiry."""
+def mark_device_connected(user_id: int, device: str, config: str) -> None:
+    """Store device config and update expiry."""
     info = get_user(user_id)
     expires = datetime.utcnow() + timedelta(minutes=CONFIG_DURATION_MINUTES)
-    info[device] = True
+    devices = info.get("devices", {})
+    devices[device] = {"config": config}
+    info["devices"] = devices
     info["expires_at"] = expires
-    increment_peers(user_id)
     save_user(user_id, info)
 
 
@@ -65,15 +63,21 @@ def build_main_menu_text(user_id: int) -> str:
     else:
         time_left = timedelta(seconds=0)
     active = time_left.total_seconds() > 0
-    phone_status = "Подключён" if info.get("phone") and active else "Не подключён"
-    pc_status = "Подключён" if info.get("computer") and active else "Не подключён"
+    devices = info.get("devices", {})
+    if devices:
+        status_lines = []
+        for name in devices.keys():
+            status = "Подключён" if active else "Не подключён"
+            status_lines.append(f"<b>{name}</b> — {status}")
+        devices_text = "\n".join(status_lines)
+    else:
+        devices_text = "Устройства не подключены"
     time_text = format_timedelta(time_left) if active else "0 секунд"
     return (
         "👋 <b>Вот информация о твоих устройствах и подписке</b>\n\n"
         "Здесь можно узнать какие устройства у тебя подключены и статус подписки.\n\n"
         "🧾 <b>Статус подключения:</b>\n"
-        f"<b>Телефон</b> — {phone_status}\n"
-        f"<b>Компьютер</b> — {pc_status}\n\n"
+        f"{devices_text}\n\n"
         f"🕒 <b>Подписка активна:</b> {time_text}\n\n"
         "🎁 <b>Бонус:</b> +7 дней за каждого приглашённого друга!"
     )
