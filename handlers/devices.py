@@ -30,8 +30,8 @@ async def choose_device(message: types.Message, state: FSMContext) -> None:
 
 @router.message(F.text == "📱Телефон")
 async def phone_selected(message: types.Message, state: FSMContext) -> None:
-    if peers_count(message.from_user.id) >= 3:
-        await message.answer("Достигнут лимит в 3 устройства")
+    if peers_count(message.from_user.id) >= 5:
+        await message.answer("Достигнут лимит в 5 устройств")
         return
     config = generate_peer(message.from_user.id)
     conf_file = create_temp_conf_file(config)
@@ -59,8 +59,8 @@ async def phone_selected(message: types.Message, state: FSMContext) -> None:
 
 @router.message(F.text == "💻Компьютер")
 async def pc_selected(message: types.Message, state: FSMContext) -> None:
-    if peers_count(message.from_user.id) >= 3:
-        await message.answer("Достигнут лимит в 3 устройства")
+    if peers_count(message.from_user.id) >= 5:
+        await message.answer("Достигнут лимит в 5 устройств")
         return
     config = generate_peer(message.from_user.id)
     conf_file = create_temp_conf_file(config)

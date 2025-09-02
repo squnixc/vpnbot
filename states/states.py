@@ -26,4 +26,5 @@ class AdminState(StatesGroup):
     about = State()
     send = State()
     gift = State()
+    config = State()
     manage = State()
