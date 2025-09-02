@@ -27,6 +27,7 @@ def get_about_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
         [KeyboardButton(text="/send")],
         [KeyboardButton(text="/gift")],
+        [KeyboardButton(text="/config")],
         [KeyboardButton(text="/back")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
@@ -45,6 +46,11 @@ def get_gift_keyboard() -> ReplyKeyboardMarkup:
         [KeyboardButton(text="/to_one"), KeyboardButton(text="/to_all")],
         [KeyboardButton(text="/back")],
     ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
+def get_config_keyboard() -> ReplyKeyboardMarkup:
+    keyboard = [[KeyboardButton(text="/back")]]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 

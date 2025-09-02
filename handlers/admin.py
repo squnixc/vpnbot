@@ -12,6 +12,7 @@ from keyboards.admin import (
     get_send_keyboard,
     get_gift_keyboard,
     get_manage_keyboard,
+    get_config_keyboard,
 )
 from utils.storage import (
     ban_user,
@@ -22,6 +23,8 @@ from utils.storage import (
 )
 from states.states import AdminState
 from handlers.start import show_main_menu
+from utils.file import create_temp_conf_file
+from vpn.wireguard import generate_peer
 
 router = Router()
 
@@ -147,6 +150,16 @@ async def about_gift(message: types.Message, state: FSMContext) -> None:
     await state.set_state(AdminState.gift)
 
 
+@router.message(AdminState.about, Command("config"))
+@router.message(AdminState.about, lambda m: m.text == "/config")
+async def about_config(message: types.Message, state: FSMContext) -> None:
+    await message.answer(
+        "Выдать конфиг. Введите Telegram ID пользователя:",
+        reply_markup=get_config_keyboard(),
+    )
+    await state.set_state(AdminState.config)
+
+
 @router.message(AdminState.send, Command("back"))
 @router.message(AdminState.send, lambda m: m.text == "/back")
 async def send_back(message: types.Message, state: FSMContext) -> None:
@@ -158,6 +171,13 @@ async def send_back(message: types.Message, state: FSMContext) -> None:
 @router.message(AdminState.gift, lambda m: m.text == "/back")
 async def gift_back(message: types.Message, state: FSMContext) -> None:
     # Return to the "about" menu when leaving the gifting section
+    await show_about(message, state)
+
+
+@router.message(AdminState.config, Command("back"))
+@router.message(AdminState.config, lambda m: m.text == "/back")
+async def config_back(message: types.Message, state: FSMContext) -> None:
+    # Return to the "about" menu when leaving the config section
     await show_about(message, state)
 
 
@@ -228,3 +248,25 @@ async def gift_to_all(message: types.Message) -> None:
     for uid in all_user_ids():
         update_expiration(uid, mins)
     await message.answer("Gift applied to all users")
+
+
+@router.message(AdminState.config)
+async def send_config(message: types.Message, state: FSMContext) -> None:
+    if not _is_admin(message.from_user.id):
+        return
+    try:
+        uid = int(message.text.strip())
+    except Exception:
+        await message.answer("Введите корректный ID пользователя")
+        return
+    try:
+        cfg = generate_peer(uid)
+    except Exception as exc:
+        await message.answer(str(exc))
+        await show_about(message, state)
+        return
+    conf_file = create_temp_conf_file(cfg)
+    await message.bot.send_message(uid, "Вам выдан конфиг")
+    await message.bot.send_document(uid, types.FSInputFile(conf_file))
+    await message.answer("Конфиг отправлен")
+    await show_about(message, state)

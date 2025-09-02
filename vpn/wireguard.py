@@ -5,8 +5,8 @@ from utils.storage import peers_count, increment_peers
 
 def generate_peer(user_id: int) -> str:
     """Return sample WireGuard config and store peer count."""
-    if peers_count(user_id) >= 3:
-        raise RuntimeError("Maximum number of peers reached")
+    if peers_count(user_id) >= 5:
+        raise RuntimeError("Maximum number of peers reached (5)")
     logging.info("Generating WireGuard config for %s", user_id)
     config = (
         "[Interface]\n"
