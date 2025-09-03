@@ -85,6 +85,12 @@ def admin_panel_kb() -> InlineKeyboardMarkup:
     )
 
 
+def back_admin_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="⬅️ Назад", callback_data="admin:panel")]]
+    )
+
+
 def traffic_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -92,20 +98,27 @@ def traffic_kb() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="1d", callback_data="traffic:1d"),
                 InlineKeyboardButton(text="7d", callback_data="traffic:7d"),
                 InlineKeyboardButton(text="30d", callback_data="traffic:30d"),
-            ]
+            ],
+            [InlineKeyboardButton(text="⬅️ Назад", callback_data="admin:panel")],
         ]
     )
 
 
 def send_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="To one", callback_data="send:to_one"), InlineKeyboardButton(text="To all", callback_data="send:to_all")]]
+        inline_keyboard=[
+            [InlineKeyboardButton(text="To one", callback_data="send:to_one"), InlineKeyboardButton(text="To all", callback_data="send:to_all")],
+            [InlineKeyboardButton(text="⬅️ Назад", callback_data="admin:panel")],
+        ]
     )
 
 
 def gift_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="To one", callback_data="gift:to_one"), InlineKeyboardButton(text="To all", callback_data="gift:to_all")]]
+        inline_keyboard=[
+            [InlineKeyboardButton(text="To one", callback_data="gift:to_one"), InlineKeyboardButton(text="To all", callback_data="gift:to_all")],
+            [InlineKeyboardButton(text="⬅️ Назад", callback_data="admin:panel")],
+        ]
     )
 
 
@@ -114,6 +127,7 @@ def manage_kb() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [InlineKeyboardButton(text="Ban", callback_data="manage:ban"), InlineKeyboardButton(text="Unban", callback_data="manage:unban")],
             [InlineKeyboardButton(text="Config", callback_data="manage:config")],
+            [InlineKeyboardButton(text="⬅️ Назад", callback_data="admin:panel")],
         ]
     )
 
@@ -135,11 +149,16 @@ async def cmd_admin_panel(message: types.Message) -> None:
     await message.answer("🛠 Админ-панель", reply_markup=admin_panel_kb())
 
 
-@router.message(Command("stats"))
-@admin_only
-async def cmd_stats(message: types.Message) -> None:
+@router.callback_query(lambda c: c.data == "admin:panel")
+@admin_only_callback
+async def cb_admin_panel(callback: types.CallbackQuery) -> None:
+    await callback.message.edit_text("🛠 Админ-панель", reply_markup=admin_panel_kb())
+    await callback.answer()
+
+
+def _stats_text() -> str:
+    conn = get_db()
     try:
-        conn = get_db()
         cur = conn.cursor()
         total = cur.execute("SELECT COUNT(*) FROM users").fetchone()[0]
         active_users = cur.execute(
@@ -152,29 +171,40 @@ async def cmd_stats(message: types.Message) -> None:
             "SELECT COUNT(*) FROM subscriptions WHERE DATE(expires_at) >= DATE('now','-7 day') AND DATE(expires_at) < DATE('now') AND status IN ('expired','canceled')"
         ).fetchone()[0]
         plan_lines = "\n".join([f"- {row['plan']}: {row['cnt']}" for row in plans]) or "-"
-        text = (
+        return (
             f"👥 Всего: {total}\n"
             f"✅ Активные: {active_users}\n"
             f"📦 По тарифам:\n{plan_lines}\n"
             f"📉 Ушли (7д): {churn}"
         )
-        await message.answer(text)
-    except Exception as e:
-        await message.answer(f"❌ Ошибка: {e}")
     finally:
         conn.close()
+
+
+@router.message(Command("stats"))
+@admin_only
+async def cmd_stats(message: types.Message) -> None:
+    try:
+        text = _stats_text()
+        await message.answer(text, reply_markup=back_admin_kb())
+    except Exception as e:
+        await message.answer(f"❌ Ошибка: {e}")
 
 
 @router.callback_query(lambda c: c.data == "stats:show")
 @admin_only_callback
 async def cb_stats(callback: types.CallbackQuery) -> None:
-    await cmd_stats(callback.message)
+    try:
+        text = _stats_text()
+    except Exception as e:
+        text = f"❌ Ошибка: {e}"
+    await callback.message.edit_text(text, reply_markup=back_admin_kb())
     await callback.answer()
 
 
-async def _traffic(message: types.Message, days: int) -> None:
+def _traffic_text(days: int) -> str:
+    conn = get_db()
     try:
-        conn = get_db()
         cur = conn.cursor()
         if days == 1:
             row = cur.execute(
@@ -188,11 +218,7 @@ async def _traffic(message: types.Message, days: int) -> None:
         up_mb = row["up"] / 1024 / 1024
         down_mb = row["down"] / 1024 / 1024
         total_mb = up_mb + down_mb
-        await message.answer(
-            f"Up: {up_mb:.2f} MB | Down: {down_mb:.2f} MB | Total: {total_mb:.2f} MB"
-        )
-    except Exception as e:
-        await message.answer(f"❌ Ошибка: {e}")
+        return f"Up: {up_mb:.2f} MB | Down: {down_mb:.2f} MB | Total: {total_mb:.2f} MB"
     finally:
         conn.close()
 
@@ -204,8 +230,11 @@ async def cmd_traffic(message: types.Message) -> None:
     period = parts[1] if len(parts) > 1 else "1d"
     days_map = {"1d": 1, "7d": 7, "30d": 30}
     days = days_map.get(period, 1)
-    await _traffic(message, days)
-
+    try:
+        text = _traffic_text(days)
+        await message.answer(text)
+    except Exception as e:
+        await message.answer(f"❌ Ошибка: {e}")
 
 @router.callback_query(lambda c: c.data.startswith("traffic"))
 @admin_only_callback
@@ -217,51 +246,64 @@ async def cb_traffic(callback: types.CallbackQuery) -> None:
     _, period = callback.data.split(":")
     days_map = {"1d": 1, "7d": 7, "30d": 30}
     days = days_map.get(period, 1)
-    await _traffic(callback.message, days)
+    try:
+        text = _traffic_text(days)
+    except Exception as e:
+        text = f"❌ Ошибка: {e}"
+    await callback.message.edit_text(text, reply_markup=traffic_kb())
     await callback.answer()
 
+
+
+def _sysinfo_text() -> str:
+    boot = dt.datetime.fromtimestamp(psutil.boot_time())
+    uptime = dt.datetime.now() - boot
+    cpu = psutil.cpu_percent()
+    mem = psutil.virtual_memory().percent
+    disk = psutil.disk_usage('/').percent
+    return (
+        f"⏱ Uptime: {uptime}\\n"
+        f"💽 CPU: {cpu}%\\n"
+        f"📦 RAM: {mem}%\\n"
+        f"💾 Disk: {disk}%"
+    )
 
 @router.message(Command("sysinfo"))
 @admin_only
 async def cmd_sysinfo(message: types.Message) -> None:
     try:
-        boot = dt.datetime.fromtimestamp(psutil.boot_time())
-        uptime = dt.datetime.now() - boot
-        cpu = psutil.cpu_percent()
-        mem = psutil.virtual_memory().percent
-        disk = psutil.disk_usage('/').percent
-        text = (
-            f"⏱ Uptime: {uptime}\n"
-            f"💽 CPU: {cpu}%\n"
-            f"📦 RAM: {mem}%\n"
-            f"💾 Disk: {disk}%"
-        )
-        await message.answer(text)
+        text = _sysinfo_text()
+        await message.answer(text, reply_markup=back_admin_kb())
     except Exception as e:
         await message.answer(f"❌ Ошибка: {e}")
-
 
 @router.callback_query(lambda c: c.data == "sysinfo:show")
 @admin_only_callback
 async def cb_sysinfo(callback: types.CallbackQuery) -> None:
-    await cmd_sysinfo(callback.message)
+    try:
+        text = _sysinfo_text()
+    except Exception as e:
+        text = f"❌ Ошибка: {e}"
+    await callback.message.edit_text(text, reply_markup=back_admin_kb())
     await callback.answer()
-
-
 @router.message(Command("about"))
 @admin_only
 async def cmd_about(message: types.Message) -> None:
-    tariffs = "\n".join([f"{k}: {v}" for k, v in TARIFFS.items()]) or "-"
-    limits = "\n".join([f"{k}: {v}" for k, v in LIMITS.items()]) or "-"
-    text = f"Версия: {VERSION}\nТарифы:\n{tariffs}\nЛимиты:\n{limits}"
-    await message.answer(text)
+    text = _about_text()
+    await message.answer(text, reply_markup=back_admin_kb())
 
 
 @router.callback_query(lambda c: c.data == "about:show")
 @admin_only_callback
 async def cb_about(callback: types.CallbackQuery) -> None:
-    await cmd_about(callback.message)
+    await callback.message.edit_text(_about_text(), reply_markup=back_admin_kb())
     await callback.answer()
+
+
+def _about_text() -> str:
+    tariffs = "\n".join([f"{k}: {v}" for k, v in TARIFFS.items()]) or "-"
+    limits = "\n".join([f"{k}: {v}" for k, v in LIMITS.items()]) or "-"
+    return f"Версия: {VERSION}\nТарифы:\n{tariffs}\nЛимиты:\n{limits}"
 
 
 async def _send_to_one(bot, uid: int, text: str) -> bool:
