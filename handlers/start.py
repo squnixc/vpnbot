@@ -6,7 +6,6 @@ from aiogram.fsm.context import FSMContext
 from keyboards.main import (
     get_intro_keyboard,
     get_main_keyboard,
-    get_main_menu_inline,
 )
 from states.states import MenuState
 from utils.userdata import build_main_menu_text
@@ -36,8 +35,7 @@ async def show_menu_after_intro(message: types.Message, state: FSMContext) -> No
 
 async def show_main_menu(message: types.Message, state: FSMContext) -> None:
     text = build_main_menu_text(message.from_user.id)
-    msg = await message.answer(text, reply_markup=get_main_keyboard(), parse_mode="HTML")
-    await msg.edit_reply_markup(reply_markup=get_main_menu_inline())
+    await message.answer(text, reply_markup=get_main_keyboard(), parse_mode="HTML")
     await state.set_state(MenuState.main_menu)
 
 
@@ -49,6 +47,8 @@ async def main_menu_button(message: types.Message, state: FSMContext) -> None:
 @router.callback_query(F.data == "main_menu")
 async def main_menu_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
-    text = build_main_menu_text(callback.from_user.id)
-    await callback.message.edit_text(text, reply_markup=get_main_menu_inline(), parse_mode="HTML")
-    await state.set_state(MenuState.main_menu)
+    try:
+        await callback.message.delete()
+    except Exception as e:  # noqa: BLE001
+        logging.exception("Failed to delete message: %s", e)
+    await show_main_menu(callback.message, state)
