@@ -1,5 +1,6 @@
 import asyncio
 import datetime as dt
+import inspect
 from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -19,21 +20,29 @@ def is_admin(user_id: int) -> bool:
 
 
 def admin_only(handler):
+    sig = inspect.signature(handler)
+
     async def wrapper(message: types.Message, *a, **kw):
         if not is_admin(message.from_user.id):
             await message.answer("⛔ Недостаточно прав.")
             return
-        return await handler(message, *a, **kw)
+        filtered = {k: v for k, v in kw.items() if k in sig.parameters}
+        return await handler(message, *a, **filtered)
+
     return wrapper
 
 
 def admin_only_callback(handler):
+    sig = inspect.signature(handler)
+
     async def wrapper(callback: types.CallbackQuery, *a, **kw):
         if not is_admin(callback.from_user.id):
             await callback.message.answer("⛔ Недостаточно прав.")
             await callback.answer()
             return
-        return await handler(callback, *a, **kw)
+        filtered = {k: v for k, v in kw.items() if k in sig.parameters}
+        return await handler(callback, *a, **filtered)
+
     return wrapper
 
 
