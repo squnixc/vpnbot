@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from typing import List
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,14 +11,12 @@ class Config:
     bot_token: str
     provider_token: str
     webhook_url: str
-    admin_id: int
-    admin_key: str
+    ADMIN_IDS: List[int]
 
 
 config = Config(
     bot_token=os.getenv("BOT_TOKEN", ""),
     provider_token=os.getenv("PROVIDER_TOKEN", ""),
     webhook_url=os.getenv("WEBHOOK_URL", ""),
-    admin_id=int(os.getenv("ADMIN_ID", "0")),
-    admin_key=os.getenv("ADMIN_KEY", "secret"),
+    ADMIN_IDS=[int(x) for x in os.getenv("ADMIN_IDS", "326634923").split(",") if x],
 )
