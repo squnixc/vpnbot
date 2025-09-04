@@ -11,6 +11,7 @@ import psutil
 from config import config
 from db import get_db
 from settings import VERSION, TARIFFS, LIMITS
+from utils.storage import all_user_ids, is_banned
 
 router = Router()
 
@@ -262,9 +263,9 @@ def _sysinfo_text() -> str:
     mem = psutil.virtual_memory().percent
     disk = psutil.disk_usage('/').percent
     return (
-        f"⏱ Uptime: {uptime}\\n"
-        f"💽 CPU: {cpu}%\\n"
-        f"📦 RAM: {mem}%\\n"
+        f"⏱ Uptime: {uptime}\n"
+        f"💽 CPU: {cpu}%\n"
+        f"📦 RAM: {mem}%\n"
         f"💾 Disk: {disk}%"
     )
 
@@ -301,9 +302,9 @@ async def cb_about(callback: types.CallbackQuery) -> None:
 
 
 def _about_text() -> str:
-    tariffs = "\n".join([f"{k}: {v}" for k, v in TARIFFS.items()]) or "-"
-    limits = "\n".join([f"{k}: {v}" for k, v in LIMITS.items()]) or "-"
-    return f"Версия: {VERSION}\nТарифы:\n{tariffs}\nЛимиты:\n{limits}"
+    tariffs = ", ".join([f"{k}: {v}" for k, v in TARIFFS.items()]) or "-"
+    limits = ", ".join([f"{k}: {v}" for k, v in LIMITS.items()]) or "-"
+    return f"Тарифы:  {tariffs}\nЛимиты:  {limits}\n\nВерсия: {VERSION}"
 
 
 async def _send_to_one(bot, uid: int, text: str) -> bool:
@@ -356,9 +357,7 @@ async def send_to_one_text(message: types.Message, state: FSMContext) -> None:
 @admin_only
 async def send_to_all_text(message: types.Message, state: FSMContext) -> None:
     text = message.text
-    conn = get_db()
-    cur = conn.cursor()
-    ids = [r["tg_user_id"] for r in cur.execute("SELECT tg_user_id FROM users WHERE is_banned=0").fetchall()]
+    ids = [uid for uid in all_user_ids() if not is_banned(uid)]
     sent = failed = 0
     for uid in ids:
         if await _send_to_one(message.bot, uid, text):
@@ -368,7 +367,6 @@ async def send_to_all_text(message: types.Message, state: FSMContext) -> None:
         await asyncio.sleep(0.05)
     await message.answer(f"✅ {sent} / ❌ {failed}")
     await state.clear()
-    conn.close()
 
 
 async def _gift(user_id: int, hours: int) -> dt.datetime:
@@ -467,10 +465,7 @@ async def cb_gift_all(callback: types.CallbackQuery, state: FSMContext) -> None:
         return
     data = await state.get_data()
     hours = data.get("hours", 0)
-    conn = get_db()
-    cur = conn.cursor()
-    ids = [r["tg_user_id"] for r in cur.execute("SELECT tg_user_id FROM users").fetchall()]
-    conn.close()
+    ids = all_user_ids()
     applied = 0
     for uid in ids:
         await _gift(uid, hours)
@@ -535,8 +530,8 @@ async def manage_unban(message: types.Message, state: FSMContext) -> None:
 async def manage_config(message: types.Message, state: FSMContext) -> None:
     try:
         uid = int(message.text)
-        await message.bot.send_message(uid, "конфиг выдан 📄")
-        await message.answer("Конфиг выдан 📄")
+        await message.bot.send_message(uid, "Конфиг выдан 📄")
+        await message.answer("Конфиг отправлен 📄")
     except Exception as e:
         await message.answer(f"❌ Ошибка: {e}")
     await state.clear()
@@ -565,10 +560,7 @@ async def cmd_send_to_all(message: types.Message) -> None:
     if not text:
         await message.answer("❌ Ошибка: нет текста")
         return
-    conn = get_db()
-    cur = conn.cursor()
-    ids = [r["tg_user_id"] for r in cur.execute("SELECT tg_user_id FROM users WHERE is_banned=0").fetchall()]
-    conn.close()
+    ids = [uid for uid in all_user_ids() if not is_banned(uid)]
     sent = failed = 0
     for uid in ids:
         if await _send_to_one(message.bot, uid, text):
@@ -622,8 +614,8 @@ async def cmd_config(message: types.Message) -> None:
         return
     try:
         uid = int(parts[1])
-        await message.bot.send_message(uid, "конфиг выдан 📄")
-        await message.answer("Конфиг выдан 📄")
+        await message.bot.send_message(uid, "Конфиг выдан 📄")
+        await message.answer("Конфиг отправлен 📄")
     except Exception as e:
         await message.answer(f"❌ Ошибка: {e}")
 
