@@ -21,8 +21,10 @@ def mark_device_connected(user_id: int, device: str, config: str) -> None:
 
 
 def get_user_info(user_id: int) -> Dict[str, Any]:
-    """Return stored info for user."""
-    return get_user(user_id)
+    """Return stored info for user and ensure it is stored."""
+    info = get_user(user_id)
+    save_user(user_id, info)
+    return info
 
 
 def plural(value: int, forms: tuple[str, str, str]) -> str:
