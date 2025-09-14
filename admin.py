@@ -401,7 +401,7 @@ async def _gift(user_id: int, hours: int) -> dt.datetime:
     return new_exp
 
 
-@router.callback_query(lambda c: c.data.startswith("gift"))
+@router.callback_query(lambda c: c.data.startswith("gift:"))
 @admin_only_callback
 async def cb_gift(callback: types.CallbackQuery, state: FSMContext) -> None:
     if callback.data == "gift:menu":
