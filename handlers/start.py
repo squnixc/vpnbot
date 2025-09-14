@@ -3,12 +3,15 @@ from aiogram import Router, types, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 
+from datetime import datetime, timedelta
+
 from keyboards.main import (
     get_intro_keyboard,
     get_main_keyboard,
 )
 from states.states import MenuState
-from utils.userdata import build_main_menu_text
+from utils.userdata import get_user_info, format_timedelta
+from utils.texts import t
 
 router = Router()
 
@@ -18,8 +21,7 @@ async def command_start(message: types.Message, state: FSMContext) -> None:
     data = await state.get_data()
     if not data.get("seen_intro"):
         await message.answer(
-            "🚀 Быстрый и простой VPN прямо в Telegram.\n"
-            "Подключайся и забудь о блокировках!",
+            t("start_pitch"),
             reply_markup=get_intro_keyboard(),
         )
         await state.update_data(seen_intro=True)
@@ -34,12 +36,29 @@ async def show_menu_after_intro(message: types.Message, state: FSMContext) -> No
 
 
 async def show_main_menu(message: types.Message, state: FSMContext) -> None:
-    text = build_main_menu_text(message.from_user.id)
-    await message.answer(text, reply_markup=get_main_keyboard(), parse_mode="HTML")
+    info = get_user_info(message.from_user.id)
+    devices = info.get("devices", {})
+    connections = len(devices)
+    expires = info.get("expires_at")
+    time_left = (expires - datetime.utcnow()) if expires else timedelta()
+    active_for = (
+        format_timedelta(time_left)
+        if time_left.total_seconds() > 0
+        else "0 секунд"
+    )
+    await message.answer(t("status_title"), parse_mode="Markdown")
+    await message.answer(
+        t("status_body").format(
+            connections=connections,
+            active_for=active_for,
+        ),
+        reply_markup=get_main_keyboard(),
+        parse_mode="Markdown",
+    )
     await state.set_state(MenuState.main_menu)
 
 
-@router.message(F.text == "🏠 Главное меню")
+@router.message(F.text == t("btn_main_menu"))
 async def main_menu_button(message: types.Message, state: FSMContext) -> None:
     await show_main_menu(message, state)
 
