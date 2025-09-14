@@ -11,6 +11,7 @@ from keyboards.main import (
 )
 from handlers.start import show_main_menu
 from states.states import MenuState, SubscriptionState
+from utils.texts import t
 
 router = Router()
 
@@ -22,19 +23,11 @@ PLANS = {
 }
 
 
-@router.message(MenuState.main_menu, F.text == "💎 Подписка")
+@router.message(MenuState.main_menu, F.text == t("btn_subscription"))
 async def subscription_plans(message: types.Message, state: FSMContext) -> None:
-    text = (
-        "🔓 Подписка открывает доступ к:\n\n"
-        "• Стабильному и быстрому соединению\n"
-        "• Доступу к заблокированным сайтам и сервисам\n"
-        "• Одновременному подключению до 3 устройств\n"
-        "• Отсутствие рекламы и прочих отвлекающих вещей\n"
-        "• Самой низкой цене на рынке - всего 3 ₽/день! 🔥\n\n"
-        "Стоимость снижается при оплате за более длительный период. \n\n"
-        "Подключение и оплата — в пару кликов!"
-    )
-    await message.answer(text, reply_markup=get_subscription_keyboard())
+    await message.answer(t("sub_title"))
+    await message.answer(t("sub_list"))
+    await message.answer(t("sub_footer"), reply_markup=get_subscription_keyboard())
     await state.set_state(SubscriptionState.plans)
 
 
