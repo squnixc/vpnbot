@@ -35,8 +35,7 @@ def get_user(user_id: int) -> Dict[str, Any]:
     return data.get(
         uid,
         {
-            "phone": False,
-            "computer": False,
+            "devices": {},
             "expires_at": None,
             "peers": 0,
             "banned": False,

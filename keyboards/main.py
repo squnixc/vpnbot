@@ -4,6 +4,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
+from utils.texts import t
 
 
 def get_intro_keyboard() -> ReplyKeyboardMarkup:
@@ -13,8 +14,9 @@ def get_intro_keyboard() -> ReplyKeyboardMarkup:
 
 def get_main_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text="📱 Устройства"), KeyboardButton(text="💎 Подписка")],
-        [KeyboardButton(text="🤝 Пригласить друга"), KeyboardButton(text="❓ Вопросы")],
+        [KeyboardButton(text=t("btn_devices")), KeyboardButton(text=t("btn_subscription"))],
+        [KeyboardButton(text="🤝 Пригласить друга"), KeyboardButton(text=t("btn_questions"))],
+        [KeyboardButton(text=t("btn_main_menu"))],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
@@ -22,7 +24,7 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
 def get_devices_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
         [KeyboardButton(text="📱Телефон"), KeyboardButton(text="💻Компьютер")],
-        [KeyboardButton(text="⬅️ Назад")],
+        [KeyboardButton(text="Мои устройства"), KeyboardButton(text="⬅️ Назад")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
@@ -53,10 +55,10 @@ def get_share_keyboard(url: str) -> InlineKeyboardMarkup:
 def get_phone_instructions_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
         [
-            KeyboardButton(text="🔴Инструкция для Android"),
-            KeyboardButton(text="🟢Инструкция для iPhone"),
+            KeyboardButton(text=t("btn_android")),
+            KeyboardButton(text=t("btn_ios")),
         ],
-        [KeyboardButton(text="🏠 Главное меню")],
+        [KeyboardButton(text=t("btn_main_menu"))],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
@@ -67,6 +69,17 @@ def get_pc_instructions_keyboard() -> ReplyKeyboardMarkup:
             KeyboardButton(text="🔴Инструкция для Windows"),
             KeyboardButton(text="🟢Инструкция для MacOS"),
         ],
-        [KeyboardButton(text="🏠 Главное меню")],
+        [KeyboardButton(text=t("btn_main_menu"))],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
+def get_my_devices_keyboard(devices: list[str]) -> ReplyKeyboardMarkup:
+    keyboard = [[KeyboardButton(text=name)] for name in devices]
+    keyboard.append([KeyboardButton(text="⬅️ Назад")])
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
+def get_main_menu_inline() -> InlineKeyboardMarkup:
+    keyboard = [[InlineKeyboardButton(text=t("btn_main_menu"), callback_data="main_menu")]]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
