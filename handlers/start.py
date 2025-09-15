@@ -57,7 +57,7 @@ async def show_main_menu(message: types.Message, state: FSMContext) -> None:
         )
         connections_block = f"📟 Подключения:\n{device_lines}"
     else:
-        connections_block = "📟 Подключения:\nНет подключений"
+        connections_block = "📟 Подключения:  Нет подключений"
 
     status_text = t("status_text").format(
         connections_block=connections_block,
