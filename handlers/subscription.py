@@ -25,9 +25,12 @@ PLANS = {
 
 @router.message(MenuState.main_menu, F.text == t("btn_subscription"))
 async def subscription_plans(message: types.Message, state: FSMContext) -> None:
-    await message.answer(t("sub_title"))
-    await message.answer(t("sub_list"))
-    await message.answer(t("sub_footer"), reply_markup=get_subscription_keyboard())
+    subscription_text = (
+        f"{t('sub_title')}\n"
+        f"{t('sub_list')}\n\n"
+        f"{t('sub_footer')}"
+    )
+    await message.answer(subscription_text, reply_markup=get_subscription_keyboard())
     await state.set_state(SubscriptionState.plans)
 
 

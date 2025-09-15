@@ -16,6 +16,7 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
         [KeyboardButton(text=t("btn_devices")), KeyboardButton(text=t("btn_subscription"))],
         [KeyboardButton(text="🤝 Пригласить друга"), KeyboardButton(text=t("btn_questions"))],
+        [KeyboardButton(text=t("btn_main_menu"))],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
