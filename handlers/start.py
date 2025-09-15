@@ -38,7 +38,6 @@ async def show_menu_after_intro(message: types.Message, state: FSMContext) -> No
 async def show_main_menu(message: types.Message, state: FSMContext) -> None:
     info = get_user_info(message.from_user.id)
     devices = info.get("devices", {})
-    connections = len(devices)
     expires = info.get("expires_at")
     time_left = (expires - datetime.utcnow()) if expires else timedelta()
     active_for = (
@@ -46,14 +45,27 @@ async def show_main_menu(message: types.Message, state: FSMContext) -> None:
         if time_left.total_seconds() > 0
         else "0 секунд"
     )
-    await message.answer(t("status_title"), parse_mode="Markdown")
+    def normalize_device_name(name: str) -> str:
+        trimmed = name.lstrip()
+        while trimmed and not trimmed[0].isalnum():
+            trimmed = trimmed[1:].lstrip()
+        return trimmed or name
+
+    if devices:
+        device_lines = "\n".join(
+            f"- {normalize_device_name(device_name)}" for device_name in devices.keys()
+        )
+        connections_block = f"📟 Подключения:\n{device_lines}"
+    else:
+        connections_block = "📟 Подключения:\nНет подключений"
+
+    status_text = t("status_text").format(
+        connections_block=connections_block,
+        active_for=active_for,
+    )
     await message.answer(
-        t("status_body").format(
-            connections=connections,
-            active_for=active_for,
-        ),
+        status_text,
         reply_markup=get_main_keyboard(),
-        parse_mode="Markdown",
     )
     await state.set_state(MenuState.main_menu)
 
