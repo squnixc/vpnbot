@@ -11,13 +11,18 @@ from keyboards.main import (
 )
 from states.states import MenuState
 from utils.userdata import get_user_info, format_timedelta
+from utils.storage import register_referral, update_expiration
 from utils.texts import t
+
+REFERRAL_REWARD_MINUTES = 7 * 24 * 60
 
 router = Router()
 
 
 @router.message(CommandStart())
 async def command_start(message: types.Message, state: FSMContext) -> None:
+    await _process_referral(message)
+
     data = await state.get_data()
     if not data.get("seen_intro"):
         await message.answer(
@@ -68,6 +73,55 @@ async def show_main_menu(message: types.Message, state: FSMContext) -> None:
         reply_markup=get_main_keyboard(),
     )
     await state.set_state(MenuState.main_menu)
+
+
+async def _process_referral(message: types.Message) -> None:
+    """Handle referral start payload, if any."""
+
+    text = message.text or ""
+    parts = text.split(maxsplit=1)
+    if len(parts) < 2:
+        return
+
+    payload = parts[1].strip()
+    if not payload.isdigit():
+        return
+
+    referrer_id = int(payload)
+    new_user_id = message.from_user.id
+
+    if referrer_id == 0 or referrer_id == new_user_id:
+        return
+
+    try:
+        is_new_referral = await register_referral(new_user_id, referrer_id)
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("Failed to register referral for %s: %s", new_user_id, exc)
+        return
+
+    if not is_new_referral:
+        return
+
+    try:
+        await update_expiration(referrer_id, REFERRAL_REWARD_MINUTES, plan="referral")
+    except Exception as exc:  # noqa: BLE001
+        logging.exception(
+            "Failed to apply referral reward for %s from %s: %s",
+            referrer_id,
+            new_user_id,
+            exc,
+        )
+        return
+
+    try:
+        await message.bot.send_message(
+            referrer_id,
+            "🎉 Ваш друг присоединился!\nВам начислено +7 дней к подписке ✨",
+        )
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("Failed to notify referrer %s: %s", referrer_id, exc)
+    else:
+        logging.info("Referral reward granted to %s by %s", referrer_id, new_user_id)
 
 
 @router.message(F.text == t("btn_main_menu"))

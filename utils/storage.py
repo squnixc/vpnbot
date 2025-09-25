@@ -11,13 +11,27 @@ from db import execute, fetchall, fetchone
 async def _ensure_user_record(tg_user_id: int) -> int:
     """Return internal DB id for Telegram user, creating the record if needed."""
 
-    row = await fetchone("SELECT id FROM users WHERE tg_user_id=%s", tg_user_id)
+    row = await fetchone(
+        "SELECT id, ref_code FROM users WHERE tg_user_id=%s",
+        tg_user_id,
+    )
     if row:
-        return row["id"]
+        user_id = row["id"]
+        if not row.get("ref_code"):
+            await execute(
+                "UPDATE users SET ref_code=%s WHERE id=%s AND (ref_code IS NULL OR ref_code='')",
+                str(tg_user_id),
+                user_id,
+            )
+        return user_id
 
     await execute(
-        "INSERT INTO users (tg_user_id) VALUES (%s) ON CONFLICT (tg_user_id) DO NOTHING",
+        (
+            "INSERT INTO users (tg_user_id, ref_code) "
+            "VALUES (%s,%s) ON CONFLICT (tg_user_id) DO NOTHING"
+        ),
         tg_user_id,
+        str(tg_user_id),
     )
 
     row = await fetchone("SELECT id FROM users WHERE tg_user_id=%s", tg_user_id)
@@ -119,15 +133,20 @@ async def peers_count(tg_user_id: int) -> int:
     return int(row["cnt"]) if row else 0
 
 
-async def update_expiration(tg_user_id: int, minutes: int) -> None:
+async def update_expiration(
+    tg_user_id: int,
+    minutes: int,
+    plan: str | None = None,
+) -> None:
     """Extend or create a subscription record for the user."""
 
     user_id = await _ensure_user_record(tg_user_id)
-    new_expires = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=minutes)
+    now = dt.datetime.now(dt.timezone.utc)
+    bonus = dt.timedelta(minutes=minutes)
 
     sub_row = await fetchone(
         """
-        SELECT id
+        SELECT id, expires_at
         FROM subscriptions
         WHERE user_id=%s AND status='active'
         ORDER BY expires_at DESC
@@ -136,16 +155,57 @@ async def update_expiration(tg_user_id: int, minutes: int) -> None:
         user_id,
     )
 
+    base_time = now
+    if sub_row and sub_row.get("expires_at"):
+        current_exp = sub_row["expires_at"]
+        if current_exp.tzinfo is None:
+            current_exp = current_exp.replace(tzinfo=dt.timezone.utc)
+        else:
+            current_exp = current_exp.astimezone(dt.timezone.utc)
+        base_time = max(base_time, current_exp)
+
+    new_expires = base_time + bonus
+
     if sub_row:
         await execute("UPDATE subscriptions SET expires_at=%s WHERE id=%s", new_expires, sub_row["id"])
     else:
         await execute(
             "INSERT INTO subscriptions (user_id, plan, status, expires_at) VALUES (%s,%s,%s,%s)",
             user_id,
-            "trial",
+            plan or "trial",
             "active",
             new_expires,
         )
+
+
+async def register_referral(new_user_tg_id: int, referrer_tg_id: int) -> bool:
+    """Store referral relation if it was not set before."""
+
+    if new_user_tg_id == referrer_tg_id:
+        return False
+
+    new_user_id = await _ensure_user_record(new_user_tg_id)
+
+    referred_row = await fetchone(
+        "SELECT referred_by FROM users WHERE id=%s",
+        new_user_id,
+    )
+    if referred_row and referred_row.get("referred_by"):
+        return False
+
+    await _ensure_user_record(referrer_tg_id)
+
+    await execute(
+        "UPDATE users SET referred_by=%s WHERE id=%s AND (referred_by IS NULL OR referred_by='')",
+        str(referrer_tg_id),
+        new_user_id,
+    )
+
+    confirm_row = await fetchone(
+        "SELECT referred_by FROM users WHERE id=%s",
+        new_user_id,
+    )
+    return bool(confirm_row and confirm_row.get("referred_by") == str(referrer_tg_id))
 
 
 async def set_ban_status(tg_user_id: int, banned: bool) -> None:
