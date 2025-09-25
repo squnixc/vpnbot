@@ -29,12 +29,34 @@ def get_devices_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
-def get_subscription_keyboard() -> ReplyKeyboardMarkup:
+def get_subscription_plan_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text="1 месяц - 99₽"), KeyboardButton(text="🔹3 месяца - 249₽")],
-        [KeyboardButton(text="🔸6 месяцев - 450₽")],
+        [KeyboardButton(text="💷Устройства: 2 - 99₽/мес.")],
+        [KeyboardButton(text="💴Устройства: 5 - 169₽/мес.")],
         [KeyboardButton(text="⬅️ Назад")],
     ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
+def get_subscription_duration_keyboard(plan_key: str) -> ReplyKeyboardMarkup:
+    plan_options = {
+        "devices_2": [
+            "1 месяц - 99₽",
+            "🔹3 месяца - 249₽",
+            "🔸6 месяцев - 399₽",
+        ],
+        "devices_5": [
+            "1 месяц - 169₽",
+            "🔹3 месяца - 449₽",
+            "🔸6 месяцев - 749₽",
+        ],
+    }
+    options = plan_options.get(plan_key, [])
+    keyboard = [
+        [KeyboardButton(text=options[0]), KeyboardButton(text=options[1])],
+        [KeyboardButton(text=options[2])],
+        [KeyboardButton(text="⬅️ Назад")],
+    ] if len(options) == 3 else [[KeyboardButton(text="⬅️ Назад")]]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
