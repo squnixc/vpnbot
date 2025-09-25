@@ -9,7 +9,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import psutil
 
 from config import config
-from db import get_db
+from db import execute, fetchall, fetchone
 from settings import VERSION, TARIFFS, LIMITS
 from utils.storage import all_user_ids, is_banned
 
@@ -157,36 +157,40 @@ async def cb_admin_panel(callback: types.CallbackQuery) -> None:
     await callback.answer()
 
 
-def _stats_text() -> str:
-    conn = get_db()
-    try:
-        cur = conn.cursor()
-        total = cur.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-        active_users = cur.execute(
-            "SELECT COUNT(DISTINCT user_id) FROM subscriptions WHERE status='active' AND expires_at > CURRENT_TIMESTAMP"
-        ).fetchone()[0]
-        plans = cur.execute(
-            "SELECT plan, COUNT(*) AS cnt FROM subscriptions WHERE status='active' AND expires_at > CURRENT_TIMESTAMP GROUP BY plan"
-        ).fetchall()
-        churn = cur.execute(
-            "SELECT COUNT(*) FROM subscriptions WHERE DATE(expires_at) >= DATE('now','-7 day') AND DATE(expires_at) < DATE('now') AND status IN ('expired','canceled')"
-        ).fetchone()[0]
-        plan_lines = "\n".join([f"- {row['plan']}: {row['cnt']}" for row in plans]) or "-"
-        return (
-            f"👥 Всего: {total}\n"
-            f"✅ Активные: {active_users}\n"
-            f"📦 По тарифам:\n{plan_lines}\n"
-            f"📉 Ушли (7д): {churn}"
-        )
-    finally:
-        conn.close()
+async def _stats_text() -> str:
+    total_row = await fetchone("SELECT COUNT(*) AS cnt FROM users")
+    active_row = await fetchone(
+        "SELECT COUNT(DISTINCT user_id) AS cnt FROM subscriptions WHERE status='active' AND expires_at > NOW()"
+    )
+    plans = await fetchall(
+        "SELECT plan, COUNT(*) AS cnt FROM subscriptions WHERE status='active' AND expires_at > NOW() GROUP BY plan"
+    )
+    churn_row = await fetchone(
+        """
+        SELECT COUNT(*) AS cnt
+        FROM subscriptions
+        WHERE expires_at::date >= (CURRENT_DATE - INTERVAL '7 days')
+          AND expires_at::date < CURRENT_DATE
+          AND status IN ('expired','canceled')
+        """
+    )
+    total = total_row["cnt"] if total_row else 0
+    active_users = active_row["cnt"] if active_row else 0
+    churn = churn_row["cnt"] if churn_row else 0
+    plan_lines = "\n".join([f"- {row['plan']}: {row['cnt']}" for row in plans]) or "-"
+    return (
+        f"👥 Всего: {total}\n"
+        f"✅ Активные: {active_users}\n"
+        f"📦 По тарифам:\n{plan_lines}\n"
+        f"📉 Ушли (7д): {churn}"
+    )
 
 
 @router.message(Command("stats"))
 @admin_only
 async def cmd_stats(message: types.Message) -> None:
     try:
-        text = _stats_text()
+        text = await _stats_text()
         await message.answer(text, reply_markup=back_admin_kb())
     except Exception as e:
         await message.answer(f"❌ Ошибка: {e}")
@@ -196,32 +200,33 @@ async def cmd_stats(message: types.Message) -> None:
 @admin_only_callback
 async def cb_stats(callback: types.CallbackQuery) -> None:
     try:
-        text = _stats_text()
+        text = await _stats_text()
     except Exception as e:
         text = f"❌ Ошибка: {e}"
     await callback.message.edit_text(text, reply_markup=back_admin_kb())
     await callback.answer()
 
 
-def _traffic_text(days: int) -> str:
-    conn = get_db()
-    try:
-        cur = conn.cursor()
-        if days == 1:
-            row = cur.execute(
-                "SELECT COALESCE(SUM(bytes_up),0) AS up, COALESCE(SUM(bytes_down),0) AS down FROM traffic_daily WHERE date = DATE('now')"
-            ).fetchone()
-        else:
-            row = cur.execute(
-                "SELECT COALESCE(SUM(bytes_up),0) AS up, COALESCE(SUM(bytes_down),0) AS down FROM traffic_daily WHERE date >= DATE('now', ?)",
-                (f"-{days} day",),
-            ).fetchone()
-        up_mb = row["up"] / 1024 / 1024
-        down_mb = row["down"] / 1024 / 1024
-        total_mb = up_mb + down_mb
-        return f"Up: {up_mb:.2f} MB | Down: {down_mb:.2f} MB | Total: {total_mb:.2f} MB"
-    finally:
-        conn.close()
+async def _traffic_text(days: int) -> str:
+    if days == 1:
+        row = await fetchone(
+            "SELECT COALESCE(SUM(bytes_up),0) AS up, COALESCE(SUM(bytes_down),0) AS down FROM traffic_daily WHERE date = CURRENT_DATE"
+        )
+    else:
+        row = await fetchone(
+            """
+            SELECT COALESCE(SUM(bytes_up),0) AS up, COALESCE(SUM(bytes_down),0) AS down
+            FROM traffic_daily
+            WHERE date >= CURRENT_DATE - (%s * INTERVAL '1 day')
+            """,
+            days,
+        )
+    up = row["up"] if row else 0
+    down = row["down"] if row else 0
+    up_mb = up / 1024 / 1024
+    down_mb = down / 1024 / 1024
+    total_mb = up_mb + down_mb
+    return f"Up: {up_mb:.2f} MB | Down: {down_mb:.2f} MB | Total: {total_mb:.2f} MB"
 
 
 @router.message(Command("traffic"))
@@ -232,7 +237,7 @@ async def cmd_traffic(message: types.Message) -> None:
     days_map = {"1d": 1, "7d": 7, "30d": 30}
     days = days_map.get(period, 1)
     try:
-        text = _traffic_text(days)
+        text = await _traffic_text(days)
         await message.answer(text)
     except Exception as e:
         await message.answer(f"❌ Ошибка: {e}")
@@ -248,7 +253,7 @@ async def cb_traffic(callback: types.CallbackQuery) -> None:
     days_map = {"1d": 1, "7d": 7, "30d": 30}
     days = days_map.get(period, 1)
     try:
-        text = _traffic_text(days)
+        text = await _traffic_text(days)
     except Exception as e:
         text = f"❌ Ошибка: {e}"
     await callback.message.edit_text(text, reply_markup=traffic_kb())
@@ -369,35 +374,59 @@ async def send_to_all_text(message: types.Message, state: FSMContext) -> None:
     await state.clear()
 
 
-async def _gift(user_id: int, hours: int) -> dt.datetime:
-    conn = get_db()
-    cur = conn.cursor()
-    row = cur.execute("SELECT id FROM users WHERE tg_user_id=?", (user_id,)).fetchone()
+async def _ensure_user_record(tg_user_id: int) -> int:
+    row = await fetchone("SELECT id FROM users WHERE tg_user_id=%s", tg_user_id)
+    if row:
+        return row["id"]
+    await execute(
+        "INSERT INTO users (tg_user_id) VALUES (%s) ON CONFLICT (tg_user_id) DO NOTHING",
+        tg_user_id,
+    )
+    row = await fetchone("SELECT id FROM users WHERE tg_user_id=%s", tg_user_id)
     if not row:
-        cur.execute("INSERT INTO users(tg_user_id) VALUES (?)", (user_id,))
-        db_id = cur.lastrowid
-    else:
-        db_id = row["id"]
-    now = dt.datetime.utcnow()
-    sub = cur.execute(
-        "SELECT id, expires_at FROM subscriptions WHERE user_id=? AND status='active' AND expires_at > CURRENT_TIMESTAMP ORDER BY expires_at DESC LIMIT 1",
-        (db_id,),
-    ).fetchone()
+        raise RuntimeError("Failed to ensure user record")
+    return row["id"]
+
+
+async def _set_ban_status(tg_user_id: int, banned: bool) -> None:
+    await execute(
+        "INSERT INTO users (tg_user_id) VALUES (%s) ON CONFLICT (tg_user_id) DO NOTHING",
+        tg_user_id,
+    )
+    await execute("UPDATE users SET is_banned=%s WHERE tg_user_id=%s", banned, tg_user_id)
+
+
+async def _gift(user_id: int, hours: int) -> dt.datetime:
+    db_id = await _ensure_user_record(user_id)
+    now = dt.datetime.now(dt.timezone.utc)
+    sub = await fetchone(
+        """
+        SELECT id, expires_at
+        FROM subscriptions
+        WHERE user_id=%s AND status='active' AND expires_at > NOW()
+        ORDER BY expires_at DESC
+        LIMIT 1
+        """,
+        db_id,
+    )
     add = dt.timedelta(hours=hours)
-    if sub:
-        expires = dt.datetime.fromisoformat(sub["expires_at"])
-        if expires < now:
-            expires = now
-        new_exp = expires + add
-        cur.execute("UPDATE subscriptions SET expires_at=? WHERE id=?", (new_exp.isoformat(), sub["id"]))
+    if sub and sub.get("expires_at"):
+        expires_at = sub["expires_at"]
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=dt.timezone.utc)
+        if expires_at < now:
+            expires_at = now
+        new_exp = expires_at + add
+        await execute("UPDATE subscriptions SET expires_at=%s WHERE id=%s", new_exp, sub["id"])
     else:
         new_exp = now + add
-        cur.execute(
-            "INSERT INTO subscriptions(user_id, plan, status, expires_at) VALUES (?,?,?,?)",
-            (db_id, "gift", "active", new_exp.isoformat()),
+        await execute(
+            "INSERT INTO subscriptions (user_id, plan, status, expires_at) VALUES (%s,%s,%s,%s)",
+            db_id,
+            "gift",
+            "active",
+            new_exp,
         )
-    conn.commit()
-    conn.close()
     return new_exp
 
 
@@ -499,11 +528,7 @@ async def cb_manage(callback: types.CallbackQuery, state: FSMContext) -> None:
 async def manage_ban(message: types.Message, state: FSMContext) -> None:
     try:
         uid = int(message.text)
-        conn = get_db()
-        conn.execute("INSERT OR IGNORE INTO users(tg_user_id) VALUES (?)", (uid,))
-        conn.execute("UPDATE users SET is_banned=1 WHERE tg_user_id=?", (uid,))
-        conn.commit()
-        conn.close()
+        await _set_ban_status(uid, True)
         await message.answer("🚫 Забанен")
     except ValueError:
         await message.answer("❌ Ошибка")
@@ -515,10 +540,7 @@ async def manage_ban(message: types.Message, state: FSMContext) -> None:
 async def manage_unban(message: types.Message, state: FSMContext) -> None:
     try:
         uid = int(message.text)
-        conn = get_db()
-        conn.execute("UPDATE users SET is_banned=0 WHERE tg_user_id=?", (uid,))
-        conn.commit()
-        conn.close()
+        await _set_ban_status(uid, False)
         await message.answer("✅ Разбанен")
     except ValueError:
         await message.answer("❌ Ошибка")
@@ -629,11 +651,7 @@ async def cmd_ban(message: types.Message) -> None:
         return
     try:
         uid = int(parts[1])
-        conn = get_db()
-        conn.execute("INSERT OR IGNORE INTO users(tg_user_id) VALUES (?)", (uid,))
-        conn.execute("UPDATE users SET is_banned=1 WHERE tg_user_id=?", (uid,))
-        conn.commit()
-        conn.close()
+        await _set_ban_status(uid, True)
         await message.answer("🚫 Забанен")
     except ValueError:
         await message.answer("❌ Ошибка")
@@ -648,10 +666,7 @@ async def cmd_unban(message: types.Message) -> None:
         return
     try:
         uid = int(parts[1])
-        conn = get_db()
-        conn.execute("UPDATE users SET is_banned=0 WHERE tg_user_id=?", (uid,))
-        conn.commit()
-        conn.close()
+        await _set_ban_status(uid, False)
         await message.answer("✅ Разбанен")
     except ValueError:
         await message.answer("❌ Ошибка")
