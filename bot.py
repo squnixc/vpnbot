@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher
@@ -28,4 +29,7 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
+    if os.name == "nt":
+        # psycopg async не дружит с ProactorEventLoop
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(main())
