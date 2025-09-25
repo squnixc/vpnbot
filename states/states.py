@@ -12,7 +12,8 @@ class DeviceState(StatesGroup):
 
 
 class SubscriptionState(StatesGroup):
-    plans = State()
+    plan_type = State()
+    duration = State()
     payment_method = State()
     confirm = State()
 
