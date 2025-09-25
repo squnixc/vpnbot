@@ -3,27 +3,26 @@ from typing import Dict, Any
 
 from .storage import (
     get_user,
-    save_user,
+    save_device_config,
+    touch_user,
+    update_expiration,
 )
 
 CONFIG_DURATION_MINUTES = 2
 
 
-def mark_device_connected(user_id: int, device: str, config: str) -> None:
+async def mark_device_connected(user_id: int, device: str, config: str) -> None:
     """Store device config and update expiry."""
-    info = get_user(user_id)
-    expires = datetime.utcnow() + timedelta(minutes=CONFIG_DURATION_MINUTES)
-    devices = info.get("devices", {})
-    devices[device] = {"config": config}
-    info["devices"] = devices
-    info["expires_at"] = expires
-    save_user(user_id, info)
+
+    await save_device_config(user_id, device, config)
+    await update_expiration(user_id, CONFIG_DURATION_MINUTES)
 
 
-def get_user_info(user_id: int) -> Dict[str, Any]:
+async def get_user_info(user_id: int) -> Dict[str, Any]:
     """Return stored info for user and ensure it is stored."""
-    info = get_user(user_id)
-    save_user(user_id, info)
+
+    info = await get_user(user_id)
+    await touch_user(user_id)
     return info
 
 
@@ -57,8 +56,8 @@ def format_timedelta(td: timedelta) -> str:
     return " ".join(parts)
 
 
-def build_main_menu_text(user_id: int) -> str:
-    info = get_user_info(user_id)
+async def build_main_menu_text(user_id: int) -> str:
+    info = await get_user_info(user_id)
     expires = info.get("expires_at")
     if expires:
         time_left = expires - datetime.utcnow()

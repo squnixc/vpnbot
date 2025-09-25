@@ -35,10 +35,10 @@ async def choose_device(message: types.Message, state: FSMContext) -> None:
 
 @router.message(DeviceState.choose_device, F.text == "📱Телефон")
 async def phone_selected(message: types.Message, state: FSMContext) -> None:
-    if peers_count(message.from_user.id) >= 5:
+    if await peers_count(message.from_user.id) >= 5:
         await message.answer(t("devices_limit_reached"))
         return
-    config = generate_peer(message.from_user.id)
+    config = await generate_peer(message.from_user.id)
     conf_file = create_temp_conf_file(config)
     qr_file = create_qr_code(config)
     await message.answer_photo(
@@ -50,17 +50,17 @@ async def phone_selected(message: types.Message, state: FSMContext) -> None:
         t("devices_pick_guide"),
         reply_markup=get_phone_instructions_keyboard(),
     )
-    mark_device_connected(message.from_user.id, "📱Телефон", config)
+    await mark_device_connected(message.from_user.id, "📱Телефон", config)
     logging.info("Sent phone config to %s", message.from_user.id)
     await state.set_state(DeviceState.choose_device)
 
 
 @router.message(DeviceState.choose_device, F.text == "💻Компьютер")
 async def pc_selected(message: types.Message, state: FSMContext) -> None:
-    if peers_count(message.from_user.id) >= 5:
+    if await peers_count(message.from_user.id) >= 5:
         await message.answer(t("devices_limit_reached"))
         return
-    config = generate_peer(message.from_user.id)
+    config = await generate_peer(message.from_user.id)
     conf_file = create_temp_conf_file(config)
     qr_file = create_qr_code(config)
     await message.answer_photo(
@@ -72,14 +72,14 @@ async def pc_selected(message: types.Message, state: FSMContext) -> None:
         t("devices_pick_guide"),
         reply_markup=get_pc_instructions_keyboard(),
     )
-    mark_device_connected(message.from_user.id, "💻Компьютер", config)
+    await mark_device_connected(message.from_user.id, "💻Компьютер", config)
     logging.info("Sent PC config to %s", message.from_user.id)
     await state.set_state(DeviceState.choose_device)
 
 
 @router.message(DeviceState.choose_device, F.text == "Мои устройства")
 async def my_devices(message: types.Message, state: FSMContext) -> None:
-    info = get_user_info(message.from_user.id)
+    info = await get_user_info(message.from_user.id)
     devices = list(info.get("devices", {}).keys())
     if not devices:
         await message.answer(t("devices_none"), reply_markup=get_devices_keyboard())
@@ -100,7 +100,7 @@ async def my_devices_back(message: types.Message, state: FSMContext) -> None:
 
 @router.message(DeviceState.my_devices)
 async def resend_config(message: types.Message, state: FSMContext) -> None:
-    info = get_user_info(message.from_user.id)
+    info = await get_user_info(message.from_user.id)
     device = info.get("devices", {}).get(message.text)
     if not device:
         await message.answer(
