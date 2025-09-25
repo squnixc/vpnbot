@@ -11,7 +11,7 @@ import psutil
 from config import config
 from db import execute, fetchall, fetchone
 from settings import VERSION, TARIFFS, LIMITS
-from utils.storage import all_user_ids, is_banned
+from utils.storage import all_user_ids
 
 router = Router()
 
@@ -362,7 +362,7 @@ async def send_to_one_text(message: types.Message, state: FSMContext) -> None:
 @admin_only
 async def send_to_all_text(message: types.Message, state: FSMContext) -> None:
     text = message.text
-    ids = [uid for uid in all_user_ids() if not is_banned(uid)]
+    ids = await all_user_ids(banned=False)
     sent = failed = 0
     for uid in ids:
         if await _send_to_one(message.bot, uid, text):
@@ -494,7 +494,7 @@ async def cb_gift_all(callback: types.CallbackQuery, state: FSMContext) -> None:
         return
     data = await state.get_data()
     hours = data.get("hours", 0)
-    ids = all_user_ids()
+    ids = await all_user_ids()
     applied = 0
     for uid in ids:
         await _gift(uid, hours)
@@ -582,7 +582,7 @@ async def cmd_send_to_all(message: types.Message) -> None:
     if not text:
         await message.answer("❌ Ошибка: нет текста")
         return
-    ids = [uid for uid in all_user_ids() if not is_banned(uid)]
+    ids = await all_user_ids(banned=False)
     sent = failed = 0
     for uid in ids:
         if await _send_to_one(message.bot, uid, text):

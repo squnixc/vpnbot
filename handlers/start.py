@@ -36,7 +36,7 @@ async def show_menu_after_intro(message: types.Message, state: FSMContext) -> No
 
 
 async def show_main_menu(message: types.Message, state: FSMContext) -> None:
-    info = get_user_info(message.from_user.id)
+    info = await get_user_info(message.from_user.id)
     devices = info.get("devices", {})
     expires = info.get("expires_at")
     time_left = (expires - datetime.utcnow()) if expires else timedelta()
