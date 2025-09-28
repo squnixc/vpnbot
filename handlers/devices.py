@@ -13,11 +13,18 @@ from states.states import MenuState, DeviceState
 from utils.file import create_temp_conf_file
 from utils.qr import create_qr_code
 from utils.userdata import mark_device_connected, get_user_info
-from utils.storage import peers_count
+from utils.plans import get_plan_limit
 from utils.texts import t
 from vpn.wireguard import generate_peer
 
 router = Router()
+
+
+async def _device_limit_info(user_id: int) -> tuple[int, int]:
+    info = await get_user_info(user_id)
+    limit = info.get("device_limit") or get_plan_limit(info.get("plan"))
+    peers = info.get("peers", len(info.get("devices", {})))
+    return peers, limit
 
 
 async def show_devices_menu(message: types.Message, state: FSMContext) -> None:
@@ -37,7 +44,8 @@ async def choose_device(message: types.Message, state: FSMContext) -> None:
     DeviceState.choose_device, F.text.in_(("📱 Телефон", "📱Телефон"))
 )
 async def phone_selected(message: types.Message, state: FSMContext) -> None:
-    if await peers_count(message.from_user.id) >= 5:
+    peers, limit = await _device_limit_info(message.from_user.id)
+    if peers >= limit:
         await message.answer(t("devices_limit_reached"))
         return
     config = await generate_peer(message.from_user.id)
@@ -61,7 +69,8 @@ async def phone_selected(message: types.Message, state: FSMContext) -> None:
     DeviceState.choose_device, F.text.in_(("💻 Компьютер", "💻Компьютер"))
 )
 async def pc_selected(message: types.Message, state: FSMContext) -> None:
-    if await peers_count(message.from_user.id) >= 5:
+    peers, limit = await _device_limit_info(message.from_user.id)
+    if peers >= limit:
         await message.answer(t("devices_limit_reached"))
         return
     config = await generate_peer(message.from_user.id)

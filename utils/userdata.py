@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Dict, Any
 
+from .plans import get_plan_limit, get_plan_title
 from .storage import (
     get_user,
     save_device_config,
@@ -65,6 +66,10 @@ async def build_main_menu_text(user_id: int) -> str:
         time_left = timedelta(seconds=0)
     active = time_left.total_seconds() > 0
     devices = info.get("devices", {})
+    plan_value = info.get("plan")
+    plan_title = get_plan_title(plan_value)
+    device_limit = info.get("device_limit") or get_plan_limit(plan_value)
+    connected_devices = len(devices)
     if devices:
         status_lines = []
         for name in devices.keys():
@@ -77,6 +82,8 @@ async def build_main_menu_text(user_id: int) -> str:
     return (
         "👋 <b>Вот информация о твоих устройствах и подписке</b>\n\n"
         "Здесь можно узнать какие устройства у тебя подключены и статус подписки.\n\n"
+        f"📦 <b>Ваш план:</b> {plan_title}\n"
+        f"(<b>Устройства:</b> {connected_devices} / {device_limit})\n\n"
         "🧾 <b>Статус подключения:</b>\n"
         f"{devices_text}\n\n"
         f"🕒 <b>Подписка активна:</b> {time_text}\n\n"
