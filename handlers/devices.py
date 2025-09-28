@@ -30,7 +30,7 @@ async def _device_limit_info(user_id: int) -> tuple[dict, int, int]:
 
 
 def _next_device_index(devices: Mapping[str, object], base_label: str) -> int:
-    pattern = re.compile(rf"^{re.escape(base_label)}(?: \((?P<index>\\d+)\))?$")
+    pattern = re.compile(rf"^{re.escape(base_label)}(?: \((?P<index>\d+)\))?$")
     max_index = 0
     for label in devices.keys():
         match = pattern.match(label)
