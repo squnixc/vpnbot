@@ -7,7 +7,6 @@ from keyboards.main import (
     get_phone_instructions_keyboard,
     get_pc_instructions_keyboard,
     get_my_devices_keyboard,
-    get_main_menu_only_keyboard,
 )
 from handlers.start import show_main_menu
 from states.states import MenuState, DeviceState
@@ -34,7 +33,9 @@ async def choose_device(message: types.Message, state: FSMContext) -> None:
     await show_devices_menu(message, state)
 
 
-@router.message(DeviceState.choose_device, F.text == "📱Телефон")
+@router.message(
+    DeviceState.choose_device, F.text.in_(("📱 Телефон", "📱Телефон"))
+)
 async def phone_selected(message: types.Message, state: FSMContext) -> None:
     if await peers_count(message.from_user.id) >= 5:
         await message.answer(t("devices_limit_reached"))
@@ -48,19 +49,17 @@ async def phone_selected(message: types.Message, state: FSMContext) -> None:
     )
     await message.answer_document(types.FSInputFile(conf_file))
     await message.answer(
-        "Если нужно вернуться, воспользуйся кнопкой ниже.",
-        reply_markup=get_main_menu_only_keyboard(),
-    )
-    await message.answer(
         t("devices_pick_guide"),
         reply_markup=get_phone_instructions_keyboard(),
     )
-    await mark_device_connected(message.from_user.id, "📱Телефон", config)
+    await mark_device_connected(message.from_user.id, "📱 Телефон", config)
     logging.info("Sent phone config to %s", message.from_user.id)
     await state.set_state(DeviceState.choose_device)
 
 
-@router.message(DeviceState.choose_device, F.text == "💻Компьютер")
+@router.message(
+    DeviceState.choose_device, F.text.in_(("💻 Компьютер", "💻Компьютер"))
+)
 async def pc_selected(message: types.Message, state: FSMContext) -> None:
     if await peers_count(message.from_user.id) >= 5:
         await message.answer(t("devices_limit_reached"))
@@ -74,26 +73,27 @@ async def pc_selected(message: types.Message, state: FSMContext) -> None:
     )
     await message.answer_document(types.FSInputFile(conf_file))
     await message.answer(
-        "Если нужно вернуться, воспользуйся кнопкой ниже.",
-        reply_markup=get_main_menu_only_keyboard(),
-    )
-    await message.answer(
         t("devices_pick_guide"),
         reply_markup=get_pc_instructions_keyboard(),
     )
-    await mark_device_connected(message.from_user.id, "💻Компьютер", config)
+    await mark_device_connected(message.from_user.id, "💻 Компьютер", config)
     logging.info("Sent PC config to %s", message.from_user.id)
     await state.set_state(DeviceState.choose_device)
 
 
-@router.message(DeviceState.choose_device, F.text == "🔌Мои устройства")
+@router.message(
+    DeviceState.choose_device, F.text.in_(("🔌 Мои устройства", "🔌Мои устройства"))
+)
 async def my_devices(message: types.Message, state: FSMContext) -> None:
     info = await get_user_info(message.from_user.id)
     devices = list(info.get("devices", {}).keys())
     if not devices:
         await message.answer(t("devices_none"), reply_markup=get_devices_keyboard())
         return
-    await message.answer("Твои устройства:", reply_markup=get_my_devices_keyboard(devices))
+    await message.answer(
+        "👇 Список твоих подключённых устройств:",
+        reply_markup=get_my_devices_keyboard(devices),
+    )
     await state.set_state(DeviceState.my_devices)
 
 
@@ -125,14 +125,10 @@ async def resend_config(message: types.Message, state: FSMContext) -> None:
         caption=t("device_ready_title") + "\n\n" + t("device_ready_body"),
     )
     await message.answer_document(types.FSInputFile(conf_file))
-    if message.text == "📱Телефон":
+    if message.text in {"📱 Телефон", "📱Телефон"}:
         kb = get_phone_instructions_keyboard()
     else:
         kb = get_pc_instructions_keyboard()
-    await message.answer(
-        "Если нужно вернуться, воспользуйся кнопкой ниже.",
-        reply_markup=get_main_menu_only_keyboard(),
-    )
     await message.answer(t("devices_pick_guide"), reply_markup=kb)
 
 
