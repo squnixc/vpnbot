@@ -31,8 +31,8 @@ def get_devices_keyboard() -> ReplyKeyboardMarkup:
 
 def get_subscription_plan_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text="💷Устройства: 2 - 99₽/мес.")],
-        [KeyboardButton(text="💴Устройства: 5 - 169₽/мес.")],
+        [KeyboardButton(text="💫 Устройства: 2 - 99₽/мес.")],
+        [KeyboardButton(text="✨ Устройства: 5 - 169₽/мес.")],
         [KeyboardButton(text="⬅️ Назад")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)

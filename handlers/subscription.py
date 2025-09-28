@@ -17,7 +17,7 @@ router = Router()
 
 PLANS = {
     "devices_2": {
-        "button": "💷Устройства: 2 - 99₽/мес.",
+        "button": "💫 Устройства: 2 - 99₽/мес.",
         "title": "Устройства: 2",
         "durations": {
             "1 месяц - 99₽": 99_00,
@@ -26,7 +26,7 @@ PLANS = {
         },
     },
     "devices_5": {
-        "button": "💴Устройства: 5 - 169₽/мес.",
+        "button": "✨ Устройства: 5 - 169₽/мес.",
         "title": "Устройства: 5",
         "durations": {
             "1 месяц - 169₽": 169_00,
@@ -124,7 +124,6 @@ async def choose_plan_type(message: types.Message, state: FSMContext) -> None:
         return
 
     plan_config = PLANS[plan_key]
-    duration_lines = "\n".join(plan_config["durations"].keys())
     await state.update_data(
         plan_key=plan_key,
         plan_title=plan_config["title"],
@@ -132,9 +131,9 @@ async def choose_plan_type(message: types.Message, state: FSMContext) -> None:
         price=None,
     )
     await message.answer(
-        "Выбери срок подписки:\n"
-        f"{duration_lines}\n"
-        f"(для плана {plan_config['title']})",
+        "⏱️Выбери срок подписки:\n"
+        f"{'  / '.join(plan_config['durations'].keys())}\n\n"
+        "💡Стоимость ниже при оплате на длительный срок.",
         reply_markup=get_subscription_duration_keyboard(plan_key),
     )
     await state.set_state(SubscriptionState.duration)
