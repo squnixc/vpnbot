@@ -23,8 +23,8 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
 
 def get_devices_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text="📱Телефон"), KeyboardButton(text="💻Компьютер")],
-        [KeyboardButton(text="🔌Мои устройства"), KeyboardButton(text="⬅️ Назад")],
+        [KeyboardButton(text="📱 Телефон"), KeyboardButton(text="💻 Компьютер")],
+        [KeyboardButton(text="🔌 Мои устройства"), KeyboardButton(text="⬅️ Назад")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
