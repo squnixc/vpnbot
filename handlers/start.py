@@ -11,10 +11,12 @@ from keyboards.main import (
 )
 from states.states import MenuState
 from utils.userdata import get_user_info, format_timedelta
-from utils.storage import register_referral, update_expiration
+from utils.storage import register_referral, update_expiration, grant_trial_if_new
+from utils.plans import get_plan_title, get_plan_limit
 from utils.texts import t
 
 REFERRAL_REWARD_MINUTES = 7 * 24 * 60
+TRIAL_PERIOD_MINUTES = 7 * 24 * 60
 
 router = Router()
 
@@ -22,6 +24,13 @@ router = Router()
 @router.message(CommandStart())
 async def command_start(message: types.Message, state: FSMContext) -> None:
     await _process_referral(message)
+
+    trial_granted = await grant_trial_if_new(message.from_user.id, TRIAL_PERIOD_MINUTES)
+    if trial_granted:
+        await message.answer(
+            "🎁 Твой бонус: 7 дней бесплатно!\n"
+            "Попробуй быстрый и защищённый доступ без ограничений."
+        )
 
     data = await state.get_data()
     if not data.get("seen_intro"):
@@ -56,17 +65,25 @@ async def show_main_menu(message: types.Message, state: FSMContext) -> None:
             trimmed = trimmed[1:].lstrip()
         return trimmed or name
 
+    plan_value = info.get("plan")
+    plan_title = get_plan_title(plan_value)
+    device_limit = info.get("device_limit") or get_plan_limit(plan_value)
+    connected_devices = len(devices)
+    devices_counter = f"(Устройства: {connected_devices} / {device_limit})"
+
     if devices:
         device_lines = "\n".join(
             f"- {normalize_device_name(device_name)}" for device_name in devices.keys()
         )
         connections_block = f"📟 Подключения:\n{device_lines}"
     else:
-        connections_block = "📟 Подключения:  Нет подключений"
+        connections_block = "📟 Подключения:\nНет подключений"
 
     status_text = t("status_text").format(
         connections_block=connections_block,
         active_for=active_for,
+        plan_title=plan_title,
+        devices_counter=devices_counter,
     )
     await message.answer(
         status_text,
@@ -103,7 +120,7 @@ async def _process_referral(message: types.Message) -> None:
         return
 
     try:
-        await update_expiration(referrer_id, REFERRAL_REWARD_MINUTES, plan="referral")
+        await update_expiration(referrer_id, REFERRAL_REWARD_MINUTES)
     except Exception as exc:  # noqa: BLE001
         logging.exception(
             "Failed to apply referral reward for %s from %s: %s",

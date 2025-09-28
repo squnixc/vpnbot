@@ -6,6 +6,7 @@ import datetime as dt
 from typing import Any, Dict, List
 
 from db import execute, fetchall, fetchone
+from .plans import get_plan_limit, normalise_plan
 
 
 async def _ensure_user_record(tg_user_id: int) -> int:
@@ -71,7 +72,7 @@ async def get_user(tg_user_id: int) -> Dict[str, Any]:
 
     sub_row = await fetchone(
         """
-        SELECT id, expires_at
+        SELECT id, plan, expires_at
         FROM subscriptions
         WHERE user_id=%s AND status='active'
         ORDER BY expires_at DESC
@@ -81,6 +82,8 @@ async def get_user(tg_user_id: int) -> Dict[str, Any]:
     )
 
     expires_at = None
+    plan_key = normalise_plan(sub_row.get("plan") if sub_row else None)
+    device_limit = get_plan_limit(plan_key)
     if sub_row and sub_row.get("expires_at"):
         expires_at = sub_row["expires_at"]
         if expires_at.tzinfo is not None:
@@ -91,6 +94,8 @@ async def get_user(tg_user_id: int) -> Dict[str, Any]:
         "expires_at": expires_at,
         "peers": len(devices_rows),
         "banned": bool(user_row and user_row.get("is_banned")),
+        "plan": plan_key,
+        "device_limit": device_limit,
     }
 
 
@@ -146,7 +151,7 @@ async def update_expiration(
 
     sub_row = await fetchone(
         """
-        SELECT id, expires_at
+        SELECT id, plan, expires_at
         FROM subscriptions
         WHERE user_id=%s AND status='active'
         ORDER BY expires_at DESC
@@ -165,17 +170,39 @@ async def update_expiration(
         base_time = max(base_time, current_exp)
 
     new_expires = base_time + bonus
+    existing_plan = sub_row.get("plan") if sub_row else None
+    plan_key = normalise_plan(plan or existing_plan)
 
     if sub_row:
-        await execute("UPDATE subscriptions SET expires_at=%s WHERE id=%s", new_expires, sub_row["id"])
+        await execute(
+            "UPDATE subscriptions SET expires_at=%s, plan=%s WHERE id=%s",
+            new_expires,
+            plan_key,
+            sub_row["id"],
+        )
     else:
         await execute(
             "INSERT INTO subscriptions (user_id, plan, status, expires_at) VALUES (%s,%s,%s,%s)",
             user_id,
-            plan or "trial",
+            plan_key,
             "active",
             new_expires,
         )
+
+
+async def grant_trial_if_new(tg_user_id: int, minutes: int) -> bool:
+    """Grant a trial subscription if the user has none yet."""
+
+    user_id = await _ensure_user_record(tg_user_id)
+    has_subscription = await fetchone(
+        "SELECT 1 FROM subscriptions WHERE user_id=%s LIMIT 1",
+        user_id,
+    )
+    if has_subscription:
+        return False
+
+    await update_expiration(tg_user_id, minutes, plan="trial")
+    return True
 
 
 async def register_referral(new_user_tg_id: int, referrer_tg_id: int) -> bool:
