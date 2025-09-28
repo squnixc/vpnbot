@@ -1,5 +1,6 @@
 import logging
 import re
+from asyncio import Lock
 from typing import Mapping
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
@@ -20,6 +21,22 @@ from utils.texts import t
 from vpn.wireguard import generate_peer
 
 router = Router()
+
+_config_generation_lock = Lock()
+_config_generation_in_progress: set[int] = set()
+
+
+async def _acquire_config_generation(user_id: int) -> bool:
+    async with _config_generation_lock:
+        if user_id in _config_generation_in_progress:
+            return False
+        _config_generation_in_progress.add(user_id)
+        return True
+
+
+async def _release_config_generation(user_id: int) -> None:
+    async with _config_generation_lock:
+        _config_generation_in_progress.discard(user_id)
 
 
 async def _device_limit_info(user_id: int) -> tuple[dict, int, int]:
@@ -82,62 +99,72 @@ async def choose_device(message: types.Message, state: FSMContext) -> None:
     DeviceState.choose_device, F.text.in_(("📱 Телефон", "📱Телефон"))
 )
 async def phone_selected(message: types.Message, state: FSMContext) -> None:
-    info, peers, limit = await _device_limit_info(message.from_user.id)
-    if peers >= limit:
-        await message.answer(t("devices_limit_reached"))
+    user_id = message.from_user.id
+    if not await _acquire_config_generation(user_id):
+        await message.answer("⏳ Конфиг уже генерируется. Дождись файла/QR.")
         return
-    config = await generate_peer(message.from_user.id)
-    devices = info.get("devices", {})
-    next_index = _next_device_index(devices, "📱 Телефон")
-    device_label = _format_device_label("📱 Телефон", next_index)
-    config_name = _build_config_basename("phone", next_index)
-    conf_file = create_temp_conf_file(config, filename=f"{config_name}.conf")
-    qr_file = create_qr_code(config)
-    await message.answer_photo(
-        types.FSInputFile(str(qr_file)),
-        caption=t("device_ready_title") + "\n\n" + t("device_ready_body"),
-    )
-    await message.answer_document(types.FSInputFile(conf_file))
-    await message.answer(
-        t("devices_pick_guide"),
-        reply_markup=get_phone_instructions_keyboard(),
-    )
-    await mark_device_connected(message.from_user.id, device_label, config)
-    logging.info(
-        "Sent phone config to %s (%s)", message.from_user.id, device_label
-    )
-    await state.set_state(DeviceState.choose_device)
+    try:
+        info, peers, limit = await _device_limit_info(user_id)
+        if peers >= limit:
+            await message.answer(t("devices_limit_reached"))
+            return
+        config = await generate_peer(user_id)
+        devices = info.get("devices", {})
+        next_index = _next_device_index(devices, "📱 Телефон")
+        device_label = _format_device_label("📱 Телефон", next_index)
+        config_name = _build_config_basename("phone", next_index)
+        conf_file = create_temp_conf_file(config, filename=f"{config_name}.conf")
+        qr_file = create_qr_code(config)
+        await message.answer_photo(
+            types.FSInputFile(str(qr_file)),
+            caption=t("device_ready_title") + "\n\n" + t("device_ready_body"),
+        )
+        await message.answer_document(types.FSInputFile(conf_file))
+        await message.answer(
+            t("devices_pick_guide"),
+            reply_markup=get_phone_instructions_keyboard(),
+        )
+        await mark_device_connected(user_id, device_label, config)
+        logging.info("Sent phone config to %s (%s)", user_id, device_label)
+        await state.set_state(DeviceState.choose_device)
+    finally:
+        await _release_config_generation(user_id)
 
 
 @router.message(
     DeviceState.choose_device, F.text.in_(("💻 Компьютер", "💻Компьютер"))
 )
 async def pc_selected(message: types.Message, state: FSMContext) -> None:
-    info, peers, limit = await _device_limit_info(message.from_user.id)
-    if peers >= limit:
-        await message.answer(t("devices_limit_reached"))
+    user_id = message.from_user.id
+    if not await _acquire_config_generation(user_id):
+        await message.answer("⏳ Конфиг уже генерируется. Дождись файла/QR.")
         return
-    config = await generate_peer(message.from_user.id)
-    devices = info.get("devices", {})
-    next_index = _next_device_index(devices, "💻 Компьютер")
-    device_label = _format_device_label("💻 Компьютер", next_index)
-    config_name = _build_config_basename("desktop", next_index)
-    conf_file = create_temp_conf_file(config, filename=f"{config_name}.conf")
-    qr_file = create_qr_code(config)
-    await message.answer_photo(
-        types.FSInputFile(str(qr_file)),
-        caption=t("device_ready_title") + "\n\n" + t("device_ready_body"),
-    )
-    await message.answer_document(types.FSInputFile(conf_file))
-    await message.answer(
-        t("devices_pick_guide"),
-        reply_markup=get_pc_instructions_keyboard(),
-    )
-    await mark_device_connected(message.from_user.id, device_label, config)
-    logging.info(
-        "Sent PC config to %s (%s)", message.from_user.id, device_label
-    )
-    await state.set_state(DeviceState.choose_device)
+    try:
+        info, peers, limit = await _device_limit_info(user_id)
+        if peers >= limit:
+            await message.answer(t("devices_limit_reached"))
+            return
+        config = await generate_peer(user_id)
+        devices = info.get("devices", {})
+        next_index = _next_device_index(devices, "💻 Компьютер")
+        device_label = _format_device_label("💻 Компьютер", next_index)
+        config_name = _build_config_basename("desktop", next_index)
+        conf_file = create_temp_conf_file(config, filename=f"{config_name}.conf")
+        qr_file = create_qr_code(config)
+        await message.answer_photo(
+            types.FSInputFile(str(qr_file)),
+            caption=t("device_ready_title") + "\n\n" + t("device_ready_body"),
+        )
+        await message.answer_document(types.FSInputFile(conf_file))
+        await message.answer(
+            t("devices_pick_guide"),
+            reply_markup=get_pc_instructions_keyboard(),
+        )
+        await mark_device_connected(user_id, device_label, config)
+        logging.info("Sent PC config to %s (%s)", user_id, device_label)
+        await state.set_state(DeviceState.choose_device)
+    finally:
+        await _release_config_generation(user_id)
 
 
 @router.message(
