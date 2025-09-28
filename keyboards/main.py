@@ -24,7 +24,7 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
 def get_devices_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
         [KeyboardButton(text="📱Телефон"), KeyboardButton(text="💻Компьютер")],
-        [KeyboardButton(text="Мои устройства"), KeyboardButton(text="⬅️ Назад")],
+        [KeyboardButton(text="🔌Мои устройства"), KeyboardButton(text="⬅️ Назад")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
@@ -74,26 +74,33 @@ def get_share_keyboard(url: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
-def get_phone_instructions_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = [
-        [
-            KeyboardButton(text=t("btn_android")),
-            KeyboardButton(text=t("btn_ios")),
-        ],
-        [KeyboardButton(text=t("btn_main_menu"))],
-    ]
+def get_main_menu_only_keyboard() -> ReplyKeyboardMarkup:
+    keyboard = [[KeyboardButton(text=t("btn_main_menu"))]]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
-def get_pc_instructions_keyboard() -> ReplyKeyboardMarkup:
+def get_phone_instructions_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [
-            KeyboardButton(text="🔴Инструкция для Windows"),
-            KeyboardButton(text="🟢Инструкция для MacOS"),
-        ],
-        [KeyboardButton(text=t("btn_main_menu"))],
+            InlineKeyboardButton(text=t("btn_android"), callback_data="instruction_android"),
+            InlineKeyboardButton(text=t("btn_ios"), callback_data="instruction_ios"),
+        ]
     ]
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_pc_instructions_keyboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="🔴 Инструкция для Windows", callback_data="instruction_windows"
+            ),
+            InlineKeyboardButton(
+                text="🟢 Инструкция для MacOS", callback_data="instruction_macos"
+            ),
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
 def get_my_devices_keyboard(devices: list[str]) -> ReplyKeyboardMarkup:

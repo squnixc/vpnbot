@@ -7,6 +7,7 @@ from keyboards.main import (
     get_phone_instructions_keyboard,
     get_pc_instructions_keyboard,
     get_my_devices_keyboard,
+    get_main_menu_only_keyboard,
 )
 from handlers.start import show_main_menu
 from states.states import MenuState, DeviceState
@@ -47,6 +48,10 @@ async def phone_selected(message: types.Message, state: FSMContext) -> None:
     )
     await message.answer_document(types.FSInputFile(conf_file))
     await message.answer(
+        "Если нужно вернуться, воспользуйся кнопкой ниже.",
+        reply_markup=get_main_menu_only_keyboard(),
+    )
+    await message.answer(
         t("devices_pick_guide"),
         reply_markup=get_phone_instructions_keyboard(),
     )
@@ -69,6 +74,10 @@ async def pc_selected(message: types.Message, state: FSMContext) -> None:
     )
     await message.answer_document(types.FSInputFile(conf_file))
     await message.answer(
+        "Если нужно вернуться, воспользуйся кнопкой ниже.",
+        reply_markup=get_main_menu_only_keyboard(),
+    )
+    await message.answer(
         t("devices_pick_guide"),
         reply_markup=get_pc_instructions_keyboard(),
     )
@@ -77,7 +86,7 @@ async def pc_selected(message: types.Message, state: FSMContext) -> None:
     await state.set_state(DeviceState.choose_device)
 
 
-@router.message(DeviceState.choose_device, F.text == "Мои устройства")
+@router.message(DeviceState.choose_device, F.text == "🔌Мои устройства")
 async def my_devices(message: types.Message, state: FSMContext) -> None:
     info = await get_user_info(message.from_user.id)
     devices = list(info.get("devices", {}).keys())
@@ -120,7 +129,20 @@ async def resend_config(message: types.Message, state: FSMContext) -> None:
         kb = get_phone_instructions_keyboard()
     else:
         kb = get_pc_instructions_keyboard()
+    await message.answer(
+        "Если нужно вернуться, воспользуйся кнопкой ниже.",
+        reply_markup=get_main_menu_only_keyboard(),
+    )
     await message.answer(t("devices_pick_guide"), reply_markup=kb)
+
+
+@router.callback_query(F.data == "instruction_android")
+async def android_instructions_callback(callback: types.CallbackQuery) -> None:
+    await callback.message.answer(
+        '<a href="https://telegra.ph/Android-Instr-06-25">📚 Инструкция для Android</a>',
+        parse_mode="HTML",
+    )
+    await callback.answer()
 
 
 @router.message(F.text == t("btn_android"))
@@ -131,6 +153,15 @@ async def android_instructions(message: types.Message) -> None:
     )
 
 
+@router.callback_query(F.data == "instruction_ios")
+async def iphone_instructions_callback(callback: types.CallbackQuery) -> None:
+    await callback.message.answer(
+        '<a href="https://telegra.ph/Android-Instr-06-25">📚 Инструкция для iPhone</a>',
+        parse_mode="HTML",
+    )
+    await callback.answer()
+
+
 @router.message(F.text == t("btn_ios"))
 async def iphone_instructions(message: types.Message) -> None:
     await message.answer(
@@ -139,7 +170,16 @@ async def iphone_instructions(message: types.Message) -> None:
     )
 
 
-@router.message(F.text == "🔴Инструкция для Windows")
+@router.callback_query(F.data == "instruction_windows")
+async def windows_instructions_callback(callback: types.CallbackQuery) -> None:
+    await callback.message.answer(
+        '<a href="https://telegra.ph/Android-Instr-06-25">📚 Инструкция для Windows</a>',
+        parse_mode="HTML",
+    )
+    await callback.answer()
+
+
+@router.message(F.text == "🔴 Инструкция для Windows")
 async def windows_instructions(message: types.Message) -> None:
     await message.answer(
         '<a href="https://telegra.ph/Android-Instr-06-25">📚 Инструкция для Windows</a>',
@@ -147,7 +187,16 @@ async def windows_instructions(message: types.Message) -> None:
     )
 
 
-@router.message(F.text == "🟢Инструкция для MacOS")
+@router.callback_query(F.data == "instruction_macos")
+async def macos_instructions_callback(callback: types.CallbackQuery) -> None:
+    await callback.message.answer(
+        '<a href="https://telegra.ph/Android-Instr-06-25">📚 Инструкция для MacOS</a>',
+        parse_mode="HTML",
+    )
+    await callback.answer()
+
+
+@router.message(F.text == "🟢 Инструкция для MacOS")
 async def macos_instructions(message: types.Message) -> None:
     await message.answer(
         '<a href="https://telegra.ph/Android-Instr-06-25">📚 Инструкция для MacOS</a>',
