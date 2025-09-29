@@ -19,6 +19,7 @@ async def faq_start(message: types.Message, state: FSMContext) -> None:
         + t("faq_body").format(
             faq_url=FAQ_URL,
             support_handle=SUPPORT_HANDLE,
+            tg_id=message.from_user.id,
         ),
         reply_markup=get_main_keyboard(),
     )
