@@ -1,13 +1,14 @@
-from datetime import datetime, timedelta
-from typing import Dict, Any
+from datetime import timedelta
+from typing import Any, Dict
 
-from .plans import get_plan_limit, get_plan_title
+from .plans import get_plan_limit
 from .storage import (
     get_user,
     save_device_config,
     touch_user,
     update_expiration,
 )
+from .texts import t
 
 CONFIG_DURATION_MINUTES = 2
 
@@ -38,54 +39,28 @@ def plural(value: int, forms: tuple[str, str, str]) -> str:
     return forms[2]
 
 
-def format_timedelta(td: timedelta) -> str:
+def _get_forms(key: str, locale: str | None) -> tuple[str, str, str]:
+    value = t(key, locale)
+    parts = value.split("|")
+    if len(parts) == 3:
+        return tuple(parts)  # type: ignore[return-value]
+    return (value, value, value)
+
+
+def format_timedelta(td: timedelta, locale: str | None = None) -> str:
     total_seconds = int(td.total_seconds())
     if total_seconds <= 0:
-        return "0 секунд"
+        return t("time_zero", locale)
     days, rem = divmod(total_seconds, 86400)
     hours, rem = divmod(rem, 3600)
     minutes, seconds = divmod(rem, 60)
     parts = []
     if days:
-        parts.append(f"{days} {plural(days, ('день','дня','дней'))}")
+        parts.append(f"{days} {plural(days, _get_forms('time_day_forms', locale))}")
     if hours:
-        parts.append(f"{hours} {plural(hours, ('час','часа','часов'))}")
+        parts.append(f"{hours} {plural(hours, _get_forms('time_hour_forms', locale))}")
     if minutes:
-        parts.append(f"{minutes} {plural(minutes, ('минута','минуты','минут'))}")
+        parts.append(f"{minutes} {plural(minutes, _get_forms('time_minute_forms', locale))}")
     if seconds and not days and not hours:
-        parts.append(f"{seconds} {plural(seconds, ('секунда','секунды','секунд'))}")
+        parts.append(f"{seconds} {plural(seconds, _get_forms('time_second_forms', locale))}")
     return " ".join(parts)
-
-
-async def build_main_menu_text(user_id: int) -> str:
-    info = await get_user_info(user_id)
-    expires = info.get("expires_at")
-    if expires:
-        time_left = expires - datetime.utcnow()
-    else:
-        time_left = timedelta(seconds=0)
-    active = time_left.total_seconds() > 0
-    devices = info.get("devices", {})
-    plan_value = info.get("plan")
-    plan_title = get_plan_title(plan_value)
-    device_limit = info.get("device_limit") or get_plan_limit(plan_value)
-    connected_devices = len(devices)
-    if devices:
-        status_lines = []
-        for name in devices.keys():
-            status = "Подключён" if active else "Не подключён"
-            status_lines.append(f"<b>{name}</b> — {status}")
-        devices_text = "\n".join(status_lines)
-    else:
-        devices_text = "Устройства не подключены"
-    time_text = format_timedelta(time_left) if active else "0 секунд"
-    return (
-        "👋 <b>Вот информация о твоих устройствах и подписке</b>\n\n"
-        "Здесь можно узнать какие устройства у тебя подключены и статус подписки.\n\n"
-        f"📦 <b>Ваш план:</b> {plan_title}\n"
-        f"(<b>Устройства:</b> {connected_devices} / {device_limit})\n\n"
-        "🧾 <b>Статус подключения:</b>\n"
-        f"{devices_text}\n\n"
-        f"🕒 <b>Подписка активна:</b> {time_text}\n\n"
-        "🎁 <b>Бонус:</b> +7 дней за каждого приглашённого друга!"
-    )

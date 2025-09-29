@@ -1,19 +1,22 @@
 import logging
-from aiogram import Router, types, F
+from datetime import datetime, timedelta
+
+from aiogram import F, Router, types
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 
-from datetime import datetime, timedelta
-
-from keyboards.main import (
-    get_intro_keyboard,
-    get_main_keyboard,
-)
+from keyboards.main import get_intro_keyboard, get_main_keyboard
 from states.states import MenuState
-from utils.userdata import get_user_info, format_timedelta
-from utils.storage import register_referral, update_expiration, grant_trial_if_new
-from utils.plans import get_plan_title, get_plan_limit
-from utils.texts import t
+from utils.plans import get_plan_limit, get_plan_title
+from utils.storage import (
+    get_user_locale,
+    grant_trial_if_new,
+    register_referral,
+    set_user_locale,
+    update_expiration,
+)
+from utils.texts import get_all_translations, normalize_locale, t
+from utils.userdata import format_timedelta, get_user_info
 
 REFERRAL_REWARD_MINUTES = 7 * 24 * 60
 TRIAL_PERIOD_MINUTES = 7 * 24 * 60
@@ -25,18 +28,20 @@ router = Router()
 async def command_start(message: types.Message, state: FSMContext) -> None:
     await _process_referral(message)
 
+    language_code = message.from_user.language_code
+    normalized_locale = normalize_locale(language_code)
+    await set_user_locale(message.from_user.id, language_code)
+    await state.update_data(locale=normalized_locale)
+
     trial_granted = await grant_trial_if_new(message.from_user.id, TRIAL_PERIOD_MINUTES)
     if trial_granted:
-        await message.answer(
-            "🎁 Твой бонус: 7 дней бесплатно!\n"
-            "Попробуй быстрый и защищённый доступ без ограничений."
-        )
+        await message.answer(t("start_trial_granted", normalized_locale))
 
     data = await state.get_data()
     if not data.get("seen_intro"):
         await message.answer(
-            t("start_pitch"),
-            reply_markup=get_intro_keyboard(),
+            t("start_pitch", normalized_locale),
+            reply_markup=get_intro_keyboard(normalized_locale),
         )
         await state.update_data(seen_intro=True)
         await state.set_state(MenuState.intro)
@@ -51,14 +56,17 @@ async def show_menu_after_intro(message: types.Message, state: FSMContext) -> No
 
 async def show_main_menu(message: types.Message, state: FSMContext) -> None:
     info = await get_user_info(message.from_user.id)
+    locale = info.get("locale") or (await state.get_data()).get("locale") or "en"
+    await state.update_data(locale=locale)
     devices = info.get("devices", {})
     expires = info.get("expires_at")
     time_left = (expires - datetime.utcnow()) if expires else timedelta()
     active_for = (
-        format_timedelta(time_left)
+        format_timedelta(time_left, locale)
         if time_left.total_seconds() > 0
-        else "0 секунд"
+        else t("time_zero", locale)
     )
+
     def normalize_device_name(name: str) -> str:
         trimmed = name.lstrip()
         while trimmed and not trimmed[0].isalnum():
@@ -66,29 +74,45 @@ async def show_main_menu(message: types.Message, state: FSMContext) -> None:
         return trimmed or name
 
     plan_value = info.get("plan")
-    plan_title = get_plan_title(plan_value)
+    plan_title = get_plan_title(plan_value, locale)
     device_limit = info.get("device_limit") or get_plan_limit(plan_value)
     connected_devices = len(devices)
-    devices_counter = f"(Устройства: {connected_devices} / {device_limit})"
+    devices_counter = t("status_devices_counter", locale).format(
+        connected=connected_devices,
+        limit=device_limit,
+    )
 
     if devices:
         device_lines = "\n".join(
-            f"- {normalize_device_name(device_name)}" for device_name in devices.keys()
+            t("status_connections_prefix", locale).format(
+                device_name=normalize_device_name(device_name)
+            )
+            for device_name in devices.keys()
         )
-        connections_block = f"📟 Подключения:\n{device_lines}"
+        connections_block = (
+            t("status_connections_header", locale) + "\n" + device_lines
+        )
     else:
-        connections_block = "📟 Подключения:\nНет подключений"
+        connections_block = (
+            t("status_connections_header", locale)
+            + "\n"
+            + t("status_connections_empty", locale)
+        )
 
-    status_text = t("status_text").format(
-        connections_block=connections_block,
-        active_for=active_for,
-        plan_title=plan_title,
-        devices_counter=devices_counter,
-    )
-    await message.answer(
-        status_text,
-        reply_markup=get_main_keyboard(),
-    )
+    status_lines = [
+        t("status_header", locale),
+        "",
+        t("status_plan_line", locale).format(plan_title=plan_title),
+        devices_counter,
+        "",
+        connections_block,
+        "",
+        t("status_active_line", locale).format(duration=active_for),
+        "",
+        t("status_bonus_line", locale),
+    ]
+    status_text = "\n".join(status_lines)
+    await message.answer(status_text, reply_markup=get_main_keyboard(locale))
     await state.set_state(MenuState.main_menu)
 
 
@@ -131,9 +155,10 @@ async def _process_referral(message: types.Message) -> None:
         return
 
     try:
+        locale = await get_user_locale(referrer_id)
         await message.bot.send_message(
             referrer_id,
-            "🎉 Ваш друг присоединился!\nВам начислено +7 дней к подписке ✨",
+            t("referral_reward_notification", locale),
         )
     except Exception as exc:  # noqa: BLE001
         logging.exception("Failed to notify referrer %s: %s", referrer_id, exc)
@@ -141,7 +166,7 @@ async def _process_referral(message: types.Message) -> None:
         logging.info("Referral reward granted to %s by %s", referrer_id, new_user_id)
 
 
-@router.message(F.text == t("btn_main_menu"))
+@router.message(F.text.in_(get_all_translations("btn_main_menu")))
 async def main_menu_button(message: types.Message, state: FSMContext) -> None:
     await show_main_menu(message, state)
 
@@ -151,6 +176,6 @@ async def main_menu_callback(callback: types.CallbackQuery, state: FSMContext) -
     await callback.answer()
     try:
         await callback.message.delete()
-    except Exception as e:  # noqa: BLE001
-        logging.exception("Failed to delete message: %s", e)
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("Failed to delete message: %s", exc)
     await show_main_menu(callback.message, state)
