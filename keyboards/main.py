@@ -100,11 +100,13 @@ def get_pc_instructions_keyboard() -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(
                 text="🔴 Инструкция для Windows", callback_data="instruction_windows"
-            ),
+            )
+        ],
+        [
             InlineKeyboardButton(
                 text="🟢 Инструкция для MacOS", callback_data="instruction_macos"
-            ),
-        ]
+            )
+        ],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
