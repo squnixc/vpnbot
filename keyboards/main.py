@@ -65,6 +65,14 @@ def get_payment_methods_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="💳 Банковская карта", callback_data="pay_card")],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_payment_navigation_keyboard() -> ReplyKeyboardMarkup:
+    keyboard = [
+        [KeyboardButton(text=t("btn_main_menu"))],
+        [KeyboardButton(text="⬅️ Назад")],
+    ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 from urllib.parse import quote_plus
 
 
@@ -81,10 +89,8 @@ def get_main_menu_only_keyboard() -> ReplyKeyboardMarkup:
 
 def get_phone_instructions_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-        [
-            InlineKeyboardButton(text=t("btn_android"), callback_data="instruction_android"),
-            InlineKeyboardButton(text=t("btn_ios"), callback_data="instruction_ios"),
-        ]
+        [InlineKeyboardButton(text=t("btn_android"), callback_data="instruction_android")],
+        [InlineKeyboardButton(text=t("btn_ios"), callback_data="instruction_ios")],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
