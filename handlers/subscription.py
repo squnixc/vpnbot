@@ -7,6 +7,7 @@ from keyboards.main import (
     get_subscription_plan_keyboard,
     get_subscription_duration_keyboard,
     get_payment_methods_keyboard,
+    get_payment_navigation_keyboard,
 )
 from handlers.start import show_main_menu
 from states.states import MenuState, SubscriptionState
@@ -107,6 +108,10 @@ async def _show_payment_options(message: types.Message, state: FSMContext) -> No
         "Мы постарались сделать процесс максимально удобным.\n\n"
         "👇 Выбери подходящий способ оплаты:",
         reply_markup=get_payment_methods_keyboard(),
+    )
+    await message.answer(
+        "🔁 Чтобы изменить тариф до оплаты, воспользуйся кнопками ниже.",
+        reply_markup=get_payment_navigation_keyboard(),
     )
     await state.update_data(
         payment_message_id=sent.message_id,
