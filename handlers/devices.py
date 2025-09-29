@@ -119,11 +119,11 @@ async def phone_selected(message: types.Message, state: FSMContext) -> None:
             types.FSInputFile(str(qr_file)),
             caption=t("device_ready_title") + "\n\n" + t("device_ready_body"),
         )
-        await message.answer_document(types.FSInputFile(conf_file))
         await message.answer(
             t("devices_pick_guide"),
             reply_markup=get_phone_instructions_keyboard(),
         )
+        await message.answer_document(types.FSInputFile(conf_file))
         await mark_device_connected(user_id, device_label, config)
         logging.info("Sent phone config to %s (%s)", user_id, device_label)
         await state.set_state(DeviceState.choose_device)
@@ -155,11 +155,11 @@ async def pc_selected(message: types.Message, state: FSMContext) -> None:
             types.FSInputFile(str(qr_file)),
             caption=t("device_ready_title") + "\n\n" + t("device_ready_body"),
         )
-        await message.answer_document(types.FSInputFile(conf_file))
         await message.answer(
             t("devices_pick_guide"),
             reply_markup=get_pc_instructions_keyboard(),
         )
+        await message.answer_document(types.FSInputFile(conf_file))
         await mark_device_connected(user_id, device_label, config)
         logging.info("Sent PC config to %s (%s)", user_id, device_label)
         await state.set_state(DeviceState.choose_device)
@@ -211,7 +211,6 @@ async def resend_config(message: types.Message, state: FSMContext) -> None:
         types.FSInputFile(str(qr_file)),
         caption=t("device_ready_title") + "\n\n" + t("device_ready_body"),
     )
-    await message.answer_document(types.FSInputFile(conf_file))
     if message.text.startswith("📱"):
         kb = get_phone_instructions_keyboard()
     elif message.text.startswith("💻"):
@@ -219,6 +218,7 @@ async def resend_config(message: types.Message, state: FSMContext) -> None:
     else:
         kb = get_phone_instructions_keyboard()
     await message.answer(t("devices_pick_guide"), reply_markup=kb)
+    await message.answer_document(types.FSInputFile(conf_file))
 
 
 @router.callback_query(F.data == "instruction_android")
