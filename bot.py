@@ -1,6 +1,7 @@
 import os
 import asyncio
 import logging
+from contextlib import suppress
 from aiogram import Bot, Dispatcher
 
 from config import config
@@ -14,7 +15,6 @@ async def main() -> None:
     await init_pool()
     await init_schema()
     assert await ping(), "DB ping failed"
-    bot = Bot(token=config.bot_token)
     dp = Dispatcher()
     dp.include_router(start.router)
     dp.include_router(devices.router)
@@ -23,10 +23,13 @@ async def main() -> None:
     dp.include_router(faq.router)
     dp.include_router(admin_router)
 
-    try:
-        await dp.start_polling(bot)
-    finally:
-        await close_pool()
+    async with Bot(token=config.bot_token) as bot:
+        try:
+            with suppress(asyncio.CancelledError):
+                await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+        finally:
+            logging.info("Shutting down...")
+            await close_pool()
 
 
 if __name__ == "__main__":
