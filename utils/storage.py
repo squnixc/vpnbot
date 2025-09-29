@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 from db import execute, fetchall, fetchone
 from .plans import get_plan_limit, normalise_plan
+from .texts import normalize_locale, t
 
 
 async def _ensure_user_record(tg_user_id: int) -> int:
@@ -48,12 +49,28 @@ async def touch_user(tg_user_id: int) -> None:
     await execute("UPDATE users SET last_seen_at=NOW() WHERE id=%s", user_id)
 
 
+async def set_user_locale(tg_user_id: int, locale: str | None) -> None:
+    """Persist user interface locale."""
+
+    user_id = await _ensure_user_record(tg_user_id)
+    normalized = normalize_locale(locale)
+    await execute("UPDATE users SET locale=%s WHERE id=%s", normalized, user_id)
+
+
+async def get_user_locale(tg_user_id: int) -> str:
+    """Fetch stored locale for the user."""
+
+    user_id = await _ensure_user_record(tg_user_id)
+    row = await fetchone("SELECT locale FROM users WHERE id=%s", user_id)
+    return normalize_locale(row.get("locale") if row else None)
+
+
 async def get_user(tg_user_id: int) -> Dict[str, Any]:
     """Fetch aggregated user info used across the bot."""
 
     user_id = await _ensure_user_record(tg_user_id)
 
-    user_row = await fetchone("SELECT is_banned FROM users WHERE id=%s", user_id)
+    user_row = await fetchone("SELECT is_banned, locale FROM users WHERE id=%s", user_id)
 
     devices_rows = await fetchall(
         """
@@ -65,9 +82,12 @@ async def get_user(tg_user_id: int) -> Dict[str, Any]:
         user_id,
     )
 
+    locale_value = normalize_locale(user_row.get("locale") if user_row else None)
     devices: Dict[str, Dict[str, str]] = {}
     for idx, row in enumerate(devices_rows, start=1):
-        label = row.get("label") or f"Устройство {idx}"
+        label = row.get("label")
+        if not label:
+            label = t("device_default_name", locale_value).format(index=idx)
         devices[label] = {"config": row.get("config_id") or ""}
 
     sub_row = await fetchone(
@@ -96,6 +116,7 @@ async def get_user(tg_user_id: int) -> Dict[str, Any]:
         "banned": bool(user_row and user_row.get("is_banned")),
         "plan": plan_key,
         "device_limit": device_limit,
+        "locale": locale_value,
     }
 
 

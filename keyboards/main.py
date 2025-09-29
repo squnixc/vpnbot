@@ -1,122 +1,145 @@
+from urllib.parse import quote_plus
+
 from aiogram.types import (
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-    InlineKeyboardMarkup,
     InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
 )
+
+from utils.subscription_plans import SUBSCRIPTION_PLANS
 from utils.texts import t
 
 
-def get_intro_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = [[KeyboardButton(text="🚀 Вперед!")]]
+def get_intro_keyboard(locale: str) -> ReplyKeyboardMarkup:
+    keyboard = [[KeyboardButton(text=t("btn_intro_continue", locale))]]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
-def get_main_keyboard() -> ReplyKeyboardMarkup:
+def get_main_keyboard(locale: str) -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text=t("btn_devices")), KeyboardButton(text=t("btn_subscription"))],
-        [KeyboardButton(text="🤝 Пригласить друга"), KeyboardButton(text=t("btn_questions"))],
-        [KeyboardButton(text=t("btn_main_menu"))],
-    ]
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
-
-
-def get_devices_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = [
-        [KeyboardButton(text="📱 Телефон"), KeyboardButton(text="💻 Компьютер")],
-        [KeyboardButton(text="🔌 Мои устройства"), KeyboardButton(text="⬅️ Назад")],
-    ]
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
-
-
-def get_subscription_plan_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = [
-        [KeyboardButton(text="💫 Устройства: 2 - 99₽/мес.")],
-        [KeyboardButton(text="✨ Устройства: 5 - 169₽/мес.")],
-        [KeyboardButton(text="⬅️ Назад")],
-    ]
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
-
-
-def get_subscription_duration_keyboard(plan_key: str) -> ReplyKeyboardMarkup:
-    plan_options = {
-        "devices_2": [
-            "1 месяц - 99₽",
-            "🔹3 месяца - 249₽",
-            "🔸6 месяцев - 399₽",
+        [
+            KeyboardButton(text=t("btn_devices", locale)),
+            KeyboardButton(text=t("btn_subscription", locale)),
         ],
-        "devices_5": [
-            "1 месяц - 169₽",
-            "🔹3 месяца - 449₽",
-            "🔸6 месяцев - 749₽",
+        [
+            KeyboardButton(text=t("btn_invite_friend", locale)),
+            KeyboardButton(text=t("btn_questions", locale)),
         ],
-    }
-    options = plan_options.get(plan_key, [])
-    keyboard = [
-        [KeyboardButton(text=options[0]), KeyboardButton(text=options[1])],
-        [KeyboardButton(text=options[2])],
-        [KeyboardButton(text="⬅️ Назад")],
-    ] if len(options) == 3 else [[KeyboardButton(text="⬅️ Назад")]]
+        [KeyboardButton(text=t("btn_main_menu", locale))],
+    ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
-def get_payment_methods_keyboard() -> InlineKeyboardMarkup:
+def get_devices_keyboard(locale: str) -> ReplyKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton(text="💳 Банковская карта", callback_data="pay_card")],
+        [
+            KeyboardButton(text=t("btn_phone", locale)),
+            KeyboardButton(text=t("btn_computer", locale)),
+        ],
+        [
+            KeyboardButton(text=t("btn_my_devices", locale)),
+            KeyboardButton(text=t("btn_back", locale)),
+        ],
+    ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
+def get_subscription_plan_keyboard(locale: str) -> ReplyKeyboardMarkup:
+    keyboard = [
+        [KeyboardButton(text=t(config["button_key"], locale))]
+        for config in SUBSCRIPTION_PLANS.values()
+    ]
+    keyboard.append([KeyboardButton(text=t("btn_back", locale))])
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
+def get_subscription_duration_keyboard(plan_key: str, locale: str) -> ReplyKeyboardMarkup:
+    plan_config = SUBSCRIPTION_PLANS.get(plan_key, {})
+    durations = [
+        t(duration_key, locale)
+        for duration_key, _ in plan_config.get("durations", ())  # type: ignore[call-arg]
+    ]
+    keyboard: list[list[KeyboardButton]] = []
+    if len(durations) >= 2:
+        keyboard.append(
+            [KeyboardButton(text=durations[0]), KeyboardButton(text=durations[1])]
+        )
+        remaining = durations[2:]
+    else:
+        remaining = durations
+    for label in remaining:
+        keyboard.append([KeyboardButton(text=label)])
+    keyboard.append([KeyboardButton(text=t("btn_back", locale))])
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
+def get_payment_methods_keyboard(locale: str) -> InlineKeyboardMarkup:
+    keyboard = [
+        [InlineKeyboardButton(text=t("btn_pay_card", locale), callback_data="pay_card")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
-def get_payment_navigation_keyboard() -> ReplyKeyboardMarkup:
+def get_payment_navigation_keyboard(locale: str) -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text=t("btn_main_menu"))],
-        [KeyboardButton(text="⬅️ Назад")],
+        [KeyboardButton(text=t("btn_main_menu", locale))],
+        [KeyboardButton(text=t("btn_back", locale))],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
-from urllib.parse import quote_plus
 
 
-def get_share_keyboard(url: str) -> InlineKeyboardMarkup:
+def get_share_keyboard(url: str, locale: str) -> InlineKeyboardMarkup:
     share_url = f"https://t.me/share/url?url={quote_plus(url)}"
-    keyboard = [[InlineKeyboardButton(text="Поделиться ссылкой", url=share_url)]]
+    keyboard = [[InlineKeyboardButton(text=t("btn_share_link", locale), url=share_url)]]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
-def get_main_menu_only_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = [[KeyboardButton(text=t("btn_main_menu"))]]
+def get_main_menu_only_keyboard(locale: str) -> ReplyKeyboardMarkup:
+    keyboard = [[KeyboardButton(text=t("btn_main_menu", locale))]]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
-def get_phone_instructions_keyboard() -> InlineKeyboardMarkup:
-    keyboard = [
-        [InlineKeyboardButton(text=t("btn_android"), callback_data="instruction_android")],
-        [InlineKeyboardButton(text=t("btn_ios"), callback_data="instruction_ios")],
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-
-def get_pc_instructions_keyboard() -> InlineKeyboardMarkup:
+def get_phone_instructions_keyboard(locale: str) -> InlineKeyboardMarkup:
     keyboard = [
         [
             InlineKeyboardButton(
-                text="🔴 Инструкция для Windows", callback_data="instruction_windows"
+                text=t("btn_android", locale), callback_data="instruction_android"
             )
         ],
         [
             InlineKeyboardButton(
-                text="🟢 Инструкция для MacOS", callback_data="instruction_macos"
+                text=t("btn_ios", locale), callback_data="instruction_ios"
             )
         ],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
-def get_my_devices_keyboard(devices: list[str]) -> ReplyKeyboardMarkup:
+def get_pc_instructions_keyboard(locale: str) -> InlineKeyboardMarkup:
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text=t("btn_windows_instructions", locale),
+                callback_data="instruction_windows",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text=t("btn_macos_instructions", locale),
+                callback_data="instruction_macos",
+            )
+        ],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_my_devices_keyboard(devices: list[str], locale: str) -> ReplyKeyboardMarkup:
     keyboard = [[KeyboardButton(text=name)] for name in devices]
-    keyboard.append([KeyboardButton(text="⬅️ Назад")])
+    keyboard.append([KeyboardButton(text=t("btn_back", locale))])
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
-def get_main_menu_inline() -> InlineKeyboardMarkup:
-    keyboard = [[InlineKeyboardButton(text=t("btn_main_menu"), callback_data="main_menu")]]
+def get_main_menu_inline(locale: str) -> InlineKeyboardMarkup:
+    keyboard = [[InlineKeyboardButton(text=t("btn_main_menu", locale), callback_data="main_menu")]]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
