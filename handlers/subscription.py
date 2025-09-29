@@ -46,19 +46,24 @@ ALL_DURATION_BUTTONS = tuple(
 )
 
 
+async def _delete_payment_message(message: types.Message, data: dict) -> None:
+    old_msg_id = data.get("payment_message_id")
+    if not old_msg_id:
+        return
+
+    try:
+        await message.bot.delete_message(
+            chat_id=message.chat.id,
+            message_id=old_msg_id,
+            revoke=True,
+        )
+    except Exception as e:  # noqa: BLE001
+        logging.exception("Failed to delete previous payment message: %s", e)
+
+
 async def _send_plan_intro(message: types.Message, state: FSMContext) -> None:
     data = await state.get_data()
-    old_msg_id = data.get("payment_message_id")
-    if old_msg_id:
-        try:
-            await message.bot.delete_message(
-                chat_id=message.chat.id,
-                message_id=old_msg_id,
-                revoke=True,
-            )
-        except Exception as e:  # noqa: BLE001
-            logging.exception("Failed to delete previous payment message: %s", e)
-
+    await _delete_payment_message(message, data)
     await state.update_data(
         payment_message_id=None,
         plan_key=None,
@@ -76,6 +81,23 @@ async def _send_plan_intro(message: types.Message, state: FSMContext) -> None:
 @router.message(MenuState.main_menu, F.text == t("btn_subscription"))
 async def subscription_plans(message: types.Message, state: FSMContext) -> None:
     await _send_plan_intro(message, state)
+
+
+async def _show_duration_selection(
+    message: types.Message, state: FSMContext, plan_key: str
+) -> None:
+    plan_config = PLANS.get(plan_key)
+    if not plan_config:
+        await _send_plan_intro(message, state)
+        return
+
+    await message.answer(
+        "⏱️Выбери срок подписки:\n"
+        f"{'  / '.join(plan_config['durations'].keys())}\n\n"
+        "💡Стоимость ниже при оплате на длительный срок.",
+        reply_markup=get_subscription_duration_keyboard(plan_key),
+    )
+    await state.set_state(SubscriptionState.duration)
 
 
 async def _show_payment_options(message: types.Message, state: FSMContext) -> None:
@@ -135,13 +157,7 @@ async def choose_plan_type(message: types.Message, state: FSMContext) -> None:
         duration=None,
         price=None,
     )
-    await message.answer(
-        "⏱️Выбери срок подписки:\n"
-        f"{'  / '.join(plan_config['durations'].keys())}\n\n"
-        "💡Стоимость ниже при оплате на длительный срок.",
-        reply_markup=get_subscription_duration_keyboard(plan_key),
-    )
-    await state.set_state(SubscriptionState.duration)
+    await _show_duration_selection(message, state, plan_key)
 
 
 @router.message(SubscriptionState.duration, F.text.in_(ALL_DURATION_BUTTONS))
@@ -179,7 +195,19 @@ async def process_payment(call: types.CallbackQuery, state: FSMContext) -> None:
 
 @router.message(SubscriptionState.payment_method, F.text == "⬅️ Назад")
 async def payment_back(message: types.Message, state: FSMContext) -> None:
-    await _send_plan_intro(message, state)
+    data = await state.get_data()
+    await _delete_payment_message(message, data)
+    plan_key = data.get("plan_key")
+    await state.update_data(
+        payment_message_id=None,
+        duration=None,
+        price=None,
+    )
+    if not plan_key:
+        await _send_plan_intro(message, state)
+        return
+
+    await _show_duration_selection(message, state, plan_key)
 
 
 @router.message(SubscriptionState.duration, F.text == "⬅️ Назад")
