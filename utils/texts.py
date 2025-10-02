@@ -54,23 +54,22 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "time_minute_forms": "minute|minutes|minutes",
         "time_second_forms": "second|seconds|seconds",
         "btn_intro_continue": "🚀 Let's go!",
-        "btn_devices": "📟 Devices",
-        "btn_subscription": "🔒 Subscription",
+        "btn_devices": "📱 Devices",
+        "btn_subscription": "💎 Subscription",
         "btn_invite_friend": "🤝 Invite a friend",
-        "btn_questions": "❓ FAQ & Support",
+        "btn_questions": "❓ Questions",
         "btn_main_menu": "🏠 Main menu",
         "btn_back": "⬅️ Back",
         "btn_phone": "📱 Phone",
         "btn_computer": "💻 Computer",
         "btn_my_devices": "🔌 My devices",
-        "btn_android": "📚 Android guide",
-        "btn_ios": "📚 iPhone guide",
+        "btn_android": "🔴 Android guide",
+        "btn_ios": "🟢 iPhone guide",
         "btn_windows_instructions": "🔴 Windows guide",
-        "btn_macos_instructions": "🟢 macOS guide",
+        "btn_macos_instructions": "🟢 MacOS guide",
         "btn_share_link": "Share the link",
         "btn_pay_card": "💳 Bank card",
         "devices_choose": (
-            "📱 Devices:\n"
             "📲 Choose the device you want to connect.\n"
             "(It only takes a couple of minutes — super simple!)"
         ),
@@ -82,9 +81,10 @@ TEXTS: Dict[str, Dict[str, str]] = {
             "Choose how you want to connect:\n"
             "1. Download the profile file and import it to AmneziaWG / WireGuard\n"
             "2. Scan the QR code right in the app\n\n"
+            "📚 Pick the right guide and connect in just a few steps.\n\n"
             "⚠️ Each profile can be used on a single device only!"
         ),
-        "devices_pick_guide": "📚 Choose the right guide below and connect in a few steps.",
+        "devices_pick_guide": "📖 Below are guides for different systems — choose yours and follow the steps.",
         "devices_none": "You have no connected devices yet.",
         "devices_list_intro": "👇 Your connected devices:",
         "devices_select_prompt": "Please choose a device from the list.",
@@ -161,39 +161,39 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "time_minute_forms": "минута|минуты|минут",
         "time_second_forms": "секунда|секунды|секунд",
         "btn_intro_continue": "🚀 Вперёд!",
-        "btn_devices": "📟 Устройства",
-        "btn_subscription": "🔒 Подписка",
+        "btn_devices": "📱 Устройства",
+        "btn_subscription": "💎 Подписка",
         "btn_invite_friend": "🤝 Пригласить друга",
-        "btn_questions": "❓ Вопросы и поддержка",
+        "btn_questions": "❓ Вопросы",
         "btn_main_menu": "🏠 Главное меню",
         "btn_back": "⬅️ Назад",
         "btn_phone": "📱 Телефон",
         "btn_computer": "💻 Компьютер",
         "btn_my_devices": "🔌 Мои устройства",
-        "btn_android": "📚 Инструкция для Android",
-        "btn_ios": "📚 Инструкция для iPhone",
-        "btn_windows_instructions": "🔴 Инструкция для Windows",
-        "btn_macos_instructions": "🟢 Инструкция для macOS",
+        "btn_android": "🔴Инструкция для Android",
+        "btn_ios": "🟢Инструкция для iPhone",
+        "btn_windows_instructions": "🔴Инструкция для Windows",
+        "btn_macos_instructions": "🟢Инструкция для MacOS",
         "btn_share_link": "Поделиться ссылкой",
         "btn_pay_card": "💳 Банковская карта",
         "devices_choose": (
-            "📱 Выбор устройства:\n"
             "📲 Выбери устройство, которое хочешь подключить.\n"
             "(Это займёт всего пару минут — всё просто!)"
         ),
         "devices_generation_in_progress": "⏳ Конфиг уже генерируется. Дождись файла или QR-кода.",
-        "devices_limit_reached": "⚠️ Достигнут лимит устройств. Удали одно, чтобы добавить новое.",
-        "device_ready_title": "📱 Настройка устройства",
+        "devices_limit_reached": "⚠️ Достигнут лимит подключений на этом тарифе",
+        "device_ready_title": "",
         "device_ready_body": (
             "🧩 Подключение почти готово!\n\n"
             "Выбери удобный способ:\n"
             "1. Скачать файл профиля и импортировать в AmneziaWG / WireGuard\n"
             "2. Отсканировать QR-код прямо в приложении\n\n"
+            "📚 Выбери подходящую инструкцию и подключись за пару шагов.\n\n"
             "⚠️ Один профиль можно использовать только на одном устройстве!"
         ),
-        "devices_pick_guide": "📚 Выбери нужную инструкцию ниже и подключись за пару шагов.",
-        "devices_none": "🔌 Подключённые устройства:\nПохоже, пока ничего не подключено.",
-        "devices_list_intro": "🔌 Что уже подключено:\n👇 Список твоих подключённых устройств:",
+        "devices_pick_guide": "📖 Ниже есть инструкции для разных устройств — выбери свою ОС и следуй шагам.",
+        "devices_none": "⛓️‍💥 У тебя пока нет подключённых устройств",
+        "devices_list_intro": "👇 Список твоих подключённых устройств:",
         "devices_select_prompt": "Пожалуйста, выбери устройство из списка.",
         "device_default_name": "Устройство {index}",
         "instruction_link_android": "<a href=\"https://telegra.ph/Android-Instr-06-25\">📚 Инструкция для Android</a>",
@@ -230,9 +230,8 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "plan_devices_5_duration_1m": "1 месяц - 169₽",
         "plan_devices_5_duration_3m": "🔹3 месяца - 449₽",
         "plan_devices_5_duration_6m": "🔸6 месяцев - 749₽",
-        "faq_title": "❓ Помощь и ответы",
+        "faq_title": "❓ Что, как и почему?",
         "faq_body": (
-            "ℹ️ Что, как и почему?\n"
             "Мы собрали частые вопросы в одной статье.\n"
             "📖 ЧаВо: {faq_url}\n\n"
             "Ваш ID для обращения: {tg_id}\n\n"
