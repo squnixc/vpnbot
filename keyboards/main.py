@@ -83,8 +83,8 @@ def get_payment_methods_keyboard(locale: str) -> InlineKeyboardMarkup:
 
 def get_payment_navigation_keyboard(locale: str) -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text=t("btn_main_menu", locale))],
         [KeyboardButton(text=t("btn_back", locale))],
+        [KeyboardButton(text=t("btn_main_menu", locale))],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 

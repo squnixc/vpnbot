@@ -147,9 +147,14 @@ async def phone_selected(message: types.Message, state: FSMContext) -> None:
         config_name = _build_config_basename("phone", next_index)
         conf_file = create_temp_conf_file(config, filename=f"{config_name}.conf")
         qr_file = create_qr_code(config)
+        caption_parts = []
+        title = t("device_ready_title", locale)
+        if title:
+            caption_parts.append(title)
+        caption_parts.append(t("device_ready_body", locale))
         await message.answer_photo(
             types.FSInputFile(str(qr_file)),
-            caption=t("device_ready_title", locale) + "\n\n" + t("device_ready_body", locale),
+            caption="\n\n".join(caption_parts),
         )
         await message.answer(
             t("devices_pick_guide", locale),
@@ -183,9 +188,14 @@ async def pc_selected(message: types.Message, state: FSMContext) -> None:
         config_name = _build_config_basename("desktop", next_index)
         conf_file = create_temp_conf_file(config, filename=f"{config_name}.conf")
         qr_file = create_qr_code(config)
+        caption_parts = []
+        title = t("device_ready_title", locale)
+        if title:
+            caption_parts.append(title)
+        caption_parts.append(t("device_ready_body", locale))
         await message.answer_photo(
             types.FSInputFile(str(qr_file)),
-            caption=t("device_ready_title", locale) + "\n\n" + t("device_ready_body", locale),
+            caption="\n\n".join(caption_parts),
         )
         await message.answer(
             t("devices_pick_guide", locale),
