@@ -40,13 +40,13 @@ TEXTS: Dict[str, Dict[str, str]] = {
     "en": {
         "start_pitch": "🚀 Fast and easy access in Telegram.\nStay private, stable, and fast wherever you are.",
         "start_trial_granted": "🎁 Your bonus: 7 days for free!\nEnjoy fast and secure access without limits.",
-        "status_header": "👋 <b>Here is information about your devices and subscription</b>",
-        "status_plan_line": "📦 <b>Your plan:</b> {plan_title}",
-        "status_devices_counter": "(<b>Devices:</b> {connected} / {limit})",
-        "status_connections_header": "📟 <b>Connections</b>",
+        "status_header": "👋 Here is information about your devices and subscription",
+        "status_plan_line": "📦 Your plan: {plan_title}",
+        "status_devices_counter": "(Devices: {connected} / {limit})",
+        "status_connections_header": "📟 Connections:",
         "status_connections_empty": "No connected devices yet",
-        "status_active_line": "🕒 <b>Subscription active:</b> {duration}",
-        "status_bonus_line": "🎁 <b>Bonus:</b> +7 days for every invited friend!",
+        "status_active_line": "🕒 Subscription active: {duration}",
+        "status_bonus_line": "🎁 Bonus: +7 days for every invited friend",
         "status_connections_prefix": "- {device_name}",
         "time_zero": "0 seconds",
         "time_day_forms": "day|days|days",
@@ -69,12 +69,22 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "btn_macos_instructions": "🟢 macOS guide",
         "btn_share_link": "Share the link",
         "btn_pay_card": "💳 Bank card",
-        "devices_choose": "Choose how you want to connect:",
+        "devices_choose": (
+            "📱 Devices:\n"
+            "📲 Choose the device you want to connect.\n"
+            "(It only takes a couple of minutes — super simple!)"
+        ),
         "devices_generation_in_progress": "⏳ Configuration is already being generated. Please wait for the file/QR.",
         "devices_limit_reached": "⚠️ Device limit reached. Remove one before adding a new device.",
-        "device_ready_title": "✅ Configuration is ready!",
-        "device_ready_body": "Scan the QR code or download the config file to connect.",
-        "devices_pick_guide": "Need instructions? Choose your platform:",
+        "device_ready_title": "📱 Phone/💻 Computer",
+        "device_ready_body": (
+            "🧩 Setup is almost done!\n\n"
+            "Choose how you want to connect:\n"
+            "1. Download the profile file and import it to AmneziaWG / WireGuard\n"
+            "2. Scan the QR code right in the app\n\n"
+            "⚠️ Each profile can be used on a single device only!"
+        ),
+        "devices_pick_guide": "📚 Choose the right guide below and connect in a few steps.",
         "devices_none": "You have no connected devices yet.",
         "devices_list_intro": "👇 Your connected devices:",
         "devices_select_prompt": "Please choose a device from the list.",
@@ -83,9 +93,16 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "instruction_link_ios": "<a href=\"https://telegra.ph/Android-Instr-06-25\">📚 Guide for iPhone</a>",
         "instruction_link_windows": "<a href=\"https://telegra.ph/Android-Instr-06-25\">📚 Guide for Windows</a>",
         "instruction_link_macos": "<a href=\"https://telegra.ph/Android-Instr-06-25\">📚 Guide for macOS</a>",
-        "subscription_intro": "Choose how many devices you want to connect:",
+        "subscription_intro": (
+            "💎 Subscription\n"
+            "✨ What you get with the subscription:\n"
+            "• Fast and secure access to your services\n"
+            "• No ads or distractions\n"
+            "• Best price — just 99₽ per month! 🔥\n\n"
+            "👉 Pick a plan for 2 or 5 devices at once."
+        ),
         "subscription_duration_prompt": "⏱️ Choose subscription duration:\n{options}",
-        "subscription_duration_hint": "💡 Longer periods are cheaper per month.",
+        "subscription_duration_hint": "💡 Longer periods cost less per month.",
         "subscription_payment_thanks": (
             "🫶 Thank you for your trust!\n\n"
             "You are one step closer to a secure, stable, and fast internet.\n"
@@ -106,16 +123,18 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "plan_devices_5_duration_1m": "1 month - 169₽",
         "plan_devices_5_duration_3m": "🔹3 months - 449₽",
         "plan_devices_5_duration_6m": "🔸6 months - 749₽",
-        "faq_title": "❓ Frequently asked questions",
+        "faq_title": "❓ Questions",
         "faq_body": (
-            "Find answers in our FAQ: {faq_url}\n"
-            "Need help? Write to @{support_handle}.\n"
-            "Your Telegram ID: {tg_id}"
+            "❓ How, what, and why?\n"
+            "We collected the most popular questions in one article.\n"
+            "📖 FAQ: {faq_url}\n\n"
+            "Your support ID: {tg_id}\n\n"
+            "🗺 Need help? Write to @{support_handle}"
         ),
         "referral_intro": (
             "🤝 Invite friends — get bonus days.\n\n"
-            "Each friend who connects via your link gives you +7 days of subscription.\n\n"
-            "Share the link and enjoy longer — for free."
+            "Every friend who connects using your link adds +7 days to your subscription.\n\n"
+            "Share the link and keep browsing longer for free."
         ),
         "referral_reward_notification": "🎉 Your friend joined!\nYou received +7 days to your subscription ✨",
         "plan_title_trial": "Trial period",
@@ -125,13 +144,17 @@ TEXTS: Dict[str, Dict[str, str]] = {
     "ru": {
         "start_pitch": "🚀 Удобный сервис прямо в Telegram.\nСохраняй приватность и стабильность где угодно.",
         "start_trial_granted": "🎁 Твой бонус: 7 дней бесплатно!\nПопробуй быстрый и защищённый доступ без ограничений.",
-        "status_header": "👋 <b>Вот информация о твоих устройствах и подписке</b>",
-        "status_plan_line": "📦 <b>Твой план:</b> {plan_title}",
-        "status_devices_counter": "(<b>Устройства:</b> {connected} / {limit})",
-        "status_connections_header": "📟 <b>Подключения</b>",
+        "status_header": (
+            "🏠 Главное меню:\n"
+            "👋 Ваши устройства и статус доступа\n\n"
+            "Здесь можно узнать какие устройства у тебя подключены и статус подписки."
+        ),
+        "status_plan_line": "📦 Ваш план: {plan_title}",
+        "status_devices_counter": "(Устройства: {connected} / {limit})",
+        "status_connections_header": "📟 Подключения:",
         "status_connections_empty": "Пока нет подключений",
-        "status_active_line": "🕒 <b>Подписка активна:</b> {duration}",
-        "status_bonus_line": "🎁 <b>Бонус:</b> +7 дней за каждого приглашённого друга!",
+        "status_active_line": "⏱️Подписка активна: {duration}",
+        "status_bonus_line": "🎁 Бонус: +7 дней за каждого приглашённого друга",
         "status_connections_prefix": "- {device_name}",
         "time_zero": "0 секунд",
         "time_day_forms": "день|дня|дней",
@@ -154,23 +177,40 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "btn_macos_instructions": "🟢 Инструкция для macOS",
         "btn_share_link": "Поделиться ссылкой",
         "btn_pay_card": "💳 Банковская карта",
-        "devices_choose": "Выбери, как хочешь подключиться:",
+        "devices_choose": (
+            "📱 Устройства:\n"
+            "📲 Выбери устройство, которое хочешь подключить.\n"
+            "(Это займёт всего пару минут — всё просто!)"
+        ),
         "devices_generation_in_progress": "⏳ Конфиг уже генерируется. Дождись файла или QR-кода.",
         "devices_limit_reached": "⚠️ Достигнут лимит устройств. Удали одно, чтобы добавить новое.",
-        "device_ready_title": "✅ Конфигурация готова!",
-        "device_ready_body": "Отсканируй QR-код или скачай конфиг, чтобы подключиться.",
-        "devices_pick_guide": "Нужна инструкция? Выбери платформу:",
-        "devices_none": "У тебя ещё нет подключённых устройств.",
-        "devices_list_intro": "👇 Список твоих подключённых устройств:",
+        "device_ready_title": "📱 Телефон/💻 Компьютер",
+        "device_ready_body": (
+            "🧩 Подключение почти готово!\n\n"
+            "Выбери удобный способ:\n"
+            "1. Скачать файл профиля и импортировать в AmneziaWG / WireGuard\n"
+            "2. Отсканировать QR-код прямо в приложении\n\n"
+            "⚠️ Один профиль можно использовать только на одном устройстве!"
+        ),
+        "devices_pick_guide": "📚 Выбери нужную инструкцию ниже и подключись за пару шагов.",
+        "devices_none": "🔌 Мои устройства:\nПохоже, пока ничего не подключено.",
+        "devices_list_intro": "🔌 Мои устройства:\n👇 Список твоих подключённых устройств:",
         "devices_select_prompt": "Пожалуйста, выбери устройство из списка.",
         "device_default_name": "Устройство {index}",
         "instruction_link_android": "<a href=\"https://telegra.ph/Android-Instr-06-25\">📚 Инструкция для Android</a>",
         "instruction_link_ios": "<a href=\"https://telegra.ph/Android-Instr-06-25\">📚 Инструкция для iPhone</a>",
         "instruction_link_windows": "<a href=\"https://telegra.ph/Android-Instr-06-25\">📚 Инструкция для Windows</a>",
         "instruction_link_macos": "<a href=\"https://telegra.ph/Android-Instr-06-25\">📚 Инструкция для macOS</a>",
-        "subscription_intro": "Выбери, сколько устройств хочешь подключить:",
+        "subscription_intro": (
+            "💎 Подписка\n"
+            "✨ Что даёт подписка:\n"
+            "• Быстрый и защищённый доступ к твоим сервисам!\n"
+            "• Никакой рекламы и отвлекающих элементов.\n"
+            "• Минимальная цена — всего 99₽ в месяц!🔥\n\n"
+            "👉 Выбирай план: для 2 или 5 устройств одновременно."
+        ),
         "subscription_duration_prompt": "⏱️Выбери срок подписки:\n{options}",
-        "subscription_duration_hint": "💡 Стоимость ниже при оплате за больший срок.",
+        "subscription_duration_hint": "💡Стоимость ниже при оплате на длительный срок.",
         "subscription_payment_thanks": (
             "🫶 Спасибо за доверие!\n\n"
             "Ты на шаг ближе к безопасному, стабильному и быстрому интернету.\n"
@@ -191,15 +231,17 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "plan_devices_5_duration_1m": "1 месяц - 169₽",
         "plan_devices_5_duration_3m": "🔹3 месяца - 449₽",
         "plan_devices_5_duration_6m": "🔸6 месяцев - 749₽",
-        "faq_title": "❓ Частые вопросы",
+        "faq_title": "❓ Вопросы",
         "faq_body": (
-            "Ответы ищи в FAQ: {faq_url}\n"
-            "Нужна помощь? Напиши @{support_handle}.\n"
-            "Твой Telegram ID: {tg_id}"
+            "❓ Что, как и почему?\n"
+            "Мы собрали частые вопросы в одной статье.\n"
+            "📖 ЧаВо: {faq_url}\n\n"
+            "Ваш ID для обращения: {tg_id}\n\n"
+            "🗺 Есть вопросы? Напишите нам: @{support_handle}"
         ),
         "referral_intro": (
             "🤝 Приглашай друзей — получай дни в подарок.\n\n"
-            "За каждого подключившегося по твоей ссылке получи +7 дней к подписке.\n\n"
+            "За каждого подключившегося по твоей ссылке — +7 дней к твоей подписке.\n\n"
             "Поделись ссылкой и пользуйся дольше — бесплатно."
         ),
         "referral_reward_notification": "🎉 Ваш друг присоединился!\nВам начислено +7 дней к подписке ✨",
