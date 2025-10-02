@@ -8,23 +8,15 @@ class MenuState(StatesGroup):
 
 class DeviceState(StatesGroup):
     choose_device = State()
+    my_devices = State()
 
 
 class SubscriptionState(StatesGroup):
-    plans = State()
+    plan_type = State()
+    duration = State()
     payment_method = State()
     confirm = State()
 
 
 class FAQState(StatesGroup):
     reading = State()
-
-
-class AdminState(StatesGroup):
-    main = State()
-    panel = State()
-    about = State()
-    send = State()
-    gift = State()
-    config = State()
-    manage = State()

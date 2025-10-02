@@ -2,9 +2,13 @@ import tempfile
 from pathlib import Path
 
 
-def create_temp_conf_file(conf: str) -> Path:
-    """Create a temporary vpn.conf file with provided configuration."""
+def create_temp_conf_file(conf: str, filename: str | None = None) -> Path:
+    """Create a temporary WireGuard configuration file."""
+
     temp_dir = Path(tempfile.mkdtemp())
-    path = temp_dir / "vpn.conf"
+    safe_name = Path(filename).name if filename else "vpn.conf"
+    if not safe_name.endswith(".conf"):
+        safe_name = f"{safe_name}.conf"
+    path = temp_dir / safe_name
     path.write_text(conf)
     return path

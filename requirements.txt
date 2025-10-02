@@ -1,0 +1,3 @@
+aiogram
+psutil
+psycopg[binary,pool]

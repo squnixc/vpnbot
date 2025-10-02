@@ -1,30 +1,31 @@
-from datetime import datetime, timedelta
-from typing import Dict, Any
+from datetime import timedelta
+from typing import Any, Dict
 
+from .plans import get_plan_limit
 from .storage import (
     get_user,
-    save_user,
-    increment_peers,
-    peers_count,
-    is_banned,
+    save_device_config,
+    touch_user,
+    update_expiration,
 )
+from .texts import t
 
 CONFIG_DURATION_MINUTES = 2
 
 
-def mark_device_connected(user_id: int, device: str) -> None:
-    """Mark device as connected, increment peers and update expiry."""
-    info = get_user(user_id)
-    expires = datetime.utcnow() + timedelta(minutes=CONFIG_DURATION_MINUTES)
-    info[device] = True
-    info["expires_at"] = expires
-    increment_peers(user_id)
-    save_user(user_id, info)
+async def mark_device_connected(user_id: int, device: str, config: str) -> None:
+    """Store device config and update expiry."""
+
+    await save_device_config(user_id, device, config)
+    await update_expiration(user_id, CONFIG_DURATION_MINUTES)
 
 
-def get_user_info(user_id: int) -> Dict[str, Any]:
-    """Return stored info for user."""
-    return get_user(user_id)
+async def get_user_info(user_id: int) -> Dict[str, Any]:
+    """Return stored info for user and ensure it is stored."""
+
+    info = await get_user(user_id)
+    await touch_user(user_id)
+    return info
 
 
 def plural(value: int, forms: tuple[str, str, str]) -> str:
@@ -38,42 +39,28 @@ def plural(value: int, forms: tuple[str, str, str]) -> str:
     return forms[2]
 
 
-def format_timedelta(td: timedelta) -> str:
+def _get_forms(key: str, locale: str | None) -> tuple[str, str, str]:
+    value = t(key, locale)
+    parts = value.split("|")
+    if len(parts) == 3:
+        return tuple(parts)  # type: ignore[return-value]
+    return (value, value, value)
+
+
+def format_timedelta(td: timedelta, locale: str | None = None) -> str:
     total_seconds = int(td.total_seconds())
     if total_seconds <= 0:
-        return "0 секунд"
+        return t("time_zero", locale)
     days, rem = divmod(total_seconds, 86400)
     hours, rem = divmod(rem, 3600)
     minutes, seconds = divmod(rem, 60)
     parts = []
     if days:
-        parts.append(f"{days} {plural(days, ('день','дня','дней'))}")
+        parts.append(f"{days} {plural(days, _get_forms('time_day_forms', locale))}")
     if hours:
-        parts.append(f"{hours} {plural(hours, ('час','часа','часов'))}")
+        parts.append(f"{hours} {plural(hours, _get_forms('time_hour_forms', locale))}")
     if minutes:
-        parts.append(f"{minutes} {plural(minutes, ('минута','минуты','минут'))}")
+        parts.append(f"{minutes} {plural(minutes, _get_forms('time_minute_forms', locale))}")
     if seconds and not days and not hours:
-        parts.append(f"{seconds} {plural(seconds, ('секунда','секунды','секунд'))}")
+        parts.append(f"{seconds} {plural(seconds, _get_forms('time_second_forms', locale))}")
     return " ".join(parts)
-
-
-def build_main_menu_text(user_id: int) -> str:
-    info = get_user_info(user_id)
-    expires = info.get("expires_at")
-    if expires:
-        time_left = expires - datetime.utcnow()
-    else:
-        time_left = timedelta(seconds=0)
-    active = time_left.total_seconds() > 0
-    phone_status = "Подключён" if info.get("phone") and active else "Не подключён"
-    pc_status = "Подключён" if info.get("computer") and active else "Не подключён"
-    time_text = format_timedelta(time_left) if active else "0 секунд"
-    return (
-        "👋 <b>Вот информация о твоих устройствах и подписке</b>\n\n"
-        "Здесь можно узнать какие устройства у тебя подключены и статус подписки.\n\n"
-        "🧾 <b>Статус подключения:</b>\n"
-        f"<b>Телефон</b> — {phone_status}\n"
-        f"<b>Компьютер</b> — {pc_status}\n\n"
-        f"🕒 <b>Подписка активна:</b> {time_text}\n\n"
-        "🎁 <b>Бонус:</b> +7 дней за каждого приглашённого друга!"
-    )
