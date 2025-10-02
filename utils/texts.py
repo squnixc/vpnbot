@@ -75,7 +75,7 @@ TEXTS: Dict[str, Dict[str, str]] = {
         ),
         "devices_generation_in_progress": "⏳ Configuration is already being generated. Please wait for the file/QR.",
         "devices_limit_reached": "⚠️ Device limit reached. Remove one before adding a new device.",
-        "device_ready_title": "📱 Phone/💻 Computer",
+        "device_ready_title": "",
         "device_ready_body": (
             "🧩 Setup is almost done!\n\n"
             "Choose how you want to connect:\n"
@@ -201,7 +201,6 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "instruction_link_windows": "<a href=\"https://telegra.ph/Android-Instr-06-25\">📚 Инструкция для Windows</a>",
         "instruction_link_macos": "<a href=\"https://telegra.ph/Android-Instr-06-25\">📚 Инструкция для macOS</a>",
         "subscription_intro": (
-            "💎 Оформление подписки\n"
             "✨ Что даёт подписка:\n"
             "• Быстрый и защищённый доступ к твоим сервисам!\n"
             "• Никакой рекламы и отвлекающих элементов.\n"
