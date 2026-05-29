@@ -1,1 +1,1 @@
-from . import start, devices, subscription, referral, faq, admin
+from . import start, devices, subscription, referral, faq

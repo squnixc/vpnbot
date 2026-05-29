@@ -1,12 +1,17 @@
 import logging
 
-from utils.storage import peers_count, increment_peers
+from utils.userdata import get_user_info
+from utils.plans import get_plan_limit
 
 
-def generate_peer(user_id: int) -> str:
+async def generate_peer(user_id: int) -> str:
     """Return sample WireGuard config and store peer count."""
-    if peers_count(user_id) >= 5:
-        raise RuntimeError("Maximum number of peers reached (5)")
+
+    info = await get_user_info(user_id)
+    limit = info.get("device_limit") or get_plan_limit(info.get("plan"))
+    peers = info.get("peers", len(info.get("devices", {})))
+    if peers >= limit:
+        raise RuntimeError(f"Maximum number of peers reached ({limit})")
     logging.info("Generating WireGuard config for %s", user_id)
     config = (
         "[Interface]\n"
@@ -28,5 +33,4 @@ def generate_peer(user_id: int) -> str:
         "AllowedIPs = 0.0.0.0/0\n"
         "Endpoint = 188.253.24.141:51822"
     )
-    increment_peers(user_id)
     return config
